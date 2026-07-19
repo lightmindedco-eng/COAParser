@@ -1,0 +1,46 @@
+============================================================
+COA Parser Report
+Source file : 2501PLO0014.0044 - Shico LLC - Sweet Cherry 100mg THC_50mg THCv 2_1 Fruit Chews (1).pdf
+Detected format : aerolabs
+============================================================
+
+CANNABINOIDS
+------------------------------
+  THC
+  THCa: 0.09%
+  THCV: 5.04%
+  CBD: 0.07%
+  CBN: 0.22%
+  CBGa: 0.06%
+  CBG: 0.19%
+  CBC: 0.12%
+  α-Bisabolol
+  α-Humulene
+  α-Pinene
+  α-Terpinene
+  α-Terpineol
+  β-Caryophyllene
+  β-Pinene
+
+TERPENES
+------------------------------
+  Nerolidol
+  3-Carene
+  Myrcene
+  Borneol
+  Camphene
+  Caryophyllene Oxide
+  Eucalyptol
+  Geraniol
+  Geranyl Acetate
+  Guaiol
+  Isopulegol
+  Limonene
+  Linalool
+  Nerol
+  Ocimene
+  Sabinene: 58.694%
+  Terpinolene: 58.694%
+  Valencene: 58.694%
+
+============================================================

@@ -1,0 +1,40 @@
+============================================================
+COA Parser Report
+Source file : 712-1.pdf
+Detected format : gateway
+============================================================
+
+CANNABINOIDS
+------------------------------
+  THC: 0.595%
+  CBC: 0.298%
+  CBCa: 0.992%
+  CBD: 0.298%
+  CBDa: 0.198%
+  CBDV: 0.198%
+  CBG: 0.298%
+  CBGa: 0.198%
+  CBL: 0.595%
+  CBN: 0.198%
+  CBNa: 0.397%
+  THCa: 0.397%
+  THCV: 0.298%
+  THCVa: 0.298%
+
+TERPENES
+------------------------------
+  Camphene: 0.00291%
+  Myrcene: 0.0145%
+  Limonene: 0.00727%
+  Eucalyptol: 0.0145%
+  Ocimene: 0.00436%
+  p-Cymene: 0.00291%
+  Terpinolene: 0.00291%
+  Linalool: 0.0145%
+  Isopulegol: 0.0145%
+  Geraniol: 0.00727%
+  Nerolidol: 0.00582%
+  Caryophyllene Oxide: 0.0145%
+  Guaiol: 0.0145%
+
+============================================================

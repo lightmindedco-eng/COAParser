@@ -1,0 +1,37 @@
+============================================================
+COA Parser Report
+Source file : 0000355115.PDF
+Detected format : gateway
+============================================================
+
+CANNABINOIDS
+------------------------------
+  Total Cannabinoids: 90.5%
+  Total THC: 81.1%
+  Total CBD: 0.000%
+  THCa: 76.7%
+  d9-THC: 13.8%
+
+TERPENES
+------------------------------
+  Total Terpenes: 1.42%
+  Limonene: 0.00075%
+  beta-Caryophyllene: 0.00075%
+  Linalool: 0.00075%
+  Myrcene: 0.00150%
+  alpha-Bisabolol: 0.00150%
+  alpha-Pinene: 0.00150%
+  Caryophyllene Oxide: 0.00150%
+  Terpinolene: 0.00075%
+  Camphene: 0.00150%
+  Ocimene: 0.00150%
+  alpha-Terpinene: 0.00150%
+  Nerolidol: 0.00300%
+  p-Cymene: 0.00150%
+  Eucalyptol: 0.00150%
+  beta-Pinene: 0.00075%
+  gamma-Terpinene: 0.00150%
+  Isopulegol: 0.00150%
+  Geraniol: 0.00075%
+
+============================================================

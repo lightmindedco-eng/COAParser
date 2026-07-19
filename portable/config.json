@@ -1,0 +1,6 @@
+{
+  "input_dir": "Input",
+  "output_dir": "Output",
+  "log_dir": "Logs",
+  "temp_dir": "Temp"
+}

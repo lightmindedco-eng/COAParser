@@ -1,0 +1,14 @@
+{
+  "aliases": {
+    "THC": ["delta-9-thc", "tetrahydrocannabinol", "d9-thc", "delta 9 thc", "delta9"],
+    "THCA": ["tetrahydrocannabinolic acid", "thc-a"],
+    "Delta-8-THC": ["delta-8", "delta 8 thc", "d8-thc", "d8 thc"],
+    "CBD": ["cannabidiol", "cbd total"],
+    "CBDA": ["cannabidiolic acid", "cbd-a"],
+    "CBG": ["cannabigerol", "cbg total"],
+    "CBGA": ["cannabigerolic acid", "cbg-a"],
+    "CBC": ["cannabichromene"],
+    "CBN": ["cannabinol"],
+    "THCV": ["tetrahydrocannabivarin", "thc-v"]
+  }
+}
