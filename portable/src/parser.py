@@ -32,7 +32,11 @@ class COAParser:
         result = ParsedResult(
             format_name=format_name,
             items=parsed.get("items", []),
-            metadata={"line_count": len(lines), "source_file": str(path)},
+            metadata={
+                "line_count": len(lines),
+                "source_file": str(path),
+                "product_name": product_name,
+            },
         )
 
         if output_dir is not None:
@@ -91,5 +95,24 @@ _TERPENE_NAMES = {
 }
 
 
+def _normalize_compound_name(name: str) -> str:
+    """Normalize compound name by replacing Greek letters with spelled-out versions."""
+    # Replace Greek letters with their spelled-out equivalents
+    normalized = name
+    normalized = normalized.replace("α", "alpha-")
+    normalized = normalized.replace("β", "beta-")
+    normalized = normalized.replace("γ", "gamma-")
+    normalized = normalized.replace("δ", "delta-")
+    # Handle cases where letter is already followed by hyphen
+    normalized = normalized.replace("alpha--", "alpha-")
+    normalized = normalized.replace("beta--", "beta-")
+    normalized = normalized.replace("gamma--", "gamma-")
+    normalized = normalized.replace("delta--", "delta-")
+    return normalized
+
+
 def _is_terpene(item: str) -> bool:
-    return item.split(":")[0].strip().lower() in _TERPENE_NAMES
+    compound_name = item.split(":")[0].strip()
+    # Normalize Greek letters first
+    normalized = _normalize_compound_name(compound_name)
+    return normalized.lower() in _TERPENE_NAMES

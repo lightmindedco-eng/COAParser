@@ -16,3 +16,12 @@ dist/
 .venv/
 venv/
 env/
+
+# Generated output and user input files
+Output/
+output/
+Input/
+BatchResults/
+portable/Output/
+portable/Input/
+batch_summary.json
