@@ -38,7 +38,10 @@ class ConfidentParser(BaseParser):
 
         results: list[str] = []
         seen: set[str] = set()
-        all_compounds = self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"]
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
 
         # Pass 1 – clean "Total X: Y %" summary lines (most reliable)
         for line in lines:
@@ -86,11 +89,17 @@ class ConfidentParser(BaseParser):
             ahead = [lines[i + j].strip() if i + j < len(lines) else "" for j in range(1, 13)]
 
             value: str | None = None
-            
+            below_loq = False
+
+            # Check current line for <LOQ / <value patterns (e.g., "0.080<0.080")
+            if re.search(r"<\s*(?:LOQ|[\d.]+)", line, re.IGNORECASE):
+                below_loq = True
+
             # First, try to extract inline values from the current line (Havard Industries format)
             # Look for all numeric values in the line (space or tab separated)
             inline_values_re = re.compile(r"\d+\.?\d*")
-            inline_matches = inline_values_re.findall(line)
+            # Skip inline extraction if line has <LOQ pattern
+            inline_matches = [] if below_loq else inline_values_re.findall(line)
             
             # Filter out numbers that are likely part of compound names (e.g., "9" from "Δ9-THC" or "d9-THC")
             # We keep: decimal numbers (with a dot) or multi-digit numbers >= 10
@@ -103,7 +112,10 @@ class ConfidentParser(BaseParser):
                 if "." in num_str or int(float(num_str)) >= 10:
                     # Also filter out mg/g values that might be > 1000
                     if num <= 999.99:
-                        result_values.append(num_str)
+                        # Check if this number is preceded by < in the original line
+                        # (e.g., "0.080<0.080" — the second 0.080 is <LOQ)
+                        if not re.search(rf"<\s*{re.escape(num_str)}", line):
+                            result_values.append(num_str)
             
             # If we have numeric values, use the second one (skip LOQ%, take Result%)
             if len(result_values) >= 2:
@@ -126,6 +138,10 @@ class ConfidentParser(BaseParser):
                 for candidate_line in ahead:
                     if nd_re.match(candidate_line):
                         value = "ND"
+                        break
+                    # Skip <LOQ / <value patterns
+                    if re.match(r"^<(?:LOQ|[\d.]+)", candidate_line, re.IGNORECASE):
+                        below_loq = True
                         break
                     
                     m_num = number_re.match(candidate_line)
@@ -151,14 +167,24 @@ class ConfidentParser(BaseParser):
                             break
 
             seen.add(matched.lower())
-            if value == "ND":
-                pass  # skip ND compounds
+            if value == "ND" or below_loq:
+                pass  # skip ND / <LOQ compounds
             elif value:
                 results.append(f"{matched}: {value}")
             else:
                 results.append(matched)
 
-        return results
+        # Post-filter: remove compounds with percentage values below 0.01%
+        filtered: list[str] = []
+        for item in results:
+            m = re.search(r":\s*(\d+\.?\d*)%$", item)
+            if m:
+                pct = float(m.group(1))
+                if pct < 0.01:
+                    continue
+            filtered.append(item)
+
+        return filtered
 
     def parse(self, lines: list[str]) -> dict[str, Any]:
         compounds = self._extract_compounds(lines)

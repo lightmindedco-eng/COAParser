@@ -1,4 +1,4 @@
-"""Base parser abstraction."""
+"""Base parser interface."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from src.core.extractor import read_text
 
 
 class BaseParser:
+    """Simple base class for format-specific parsers."""
+
     name = "base"
 
     def __init__(self) -> None:
@@ -62,7 +64,10 @@ class BaseParser:
 
         results: list[str] = []
         seen: set[str] = set()
-        all_compounds = self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"]
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
 
         # Pass 1 – clean "Total X: Y %" summary lines (most reliable)
         for line in lines:
@@ -133,5 +138,6 @@ class BaseParser:
         return results
 
     def parse(self, lines: list[str]) -> dict[str, Any]:
+        """Parse a list of text lines into structured data."""
         compounds = self._extract_compounds(lines)
         return {"format": self.name, "items": compounds or [f"Detected {self.name} document"]}

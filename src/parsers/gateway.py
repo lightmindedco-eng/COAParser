@@ -11,13 +11,45 @@ from .base import BaseParser
 class GatewayParser(BaseParser):
     name = "gateway"
 
+    @staticmethod
+    def _normalize_name(name: str) -> str:
+        """Normalize compound name by replacing Greek letters with spelled-out versions."""
+        normalized = name
+        normalized = normalized.replace("\u0394", "delta-").replace("\u03b4", "delta-")
+        normalized = normalized.replace("\u03b1", "alpha-").replace("\u0391", "alpha-")
+        normalized = normalized.replace("\u03b2", "beta-").replace("\u0392", "beta-")
+        normalized = normalized.replace("\u03b3", "gamma-").replace("\u0393", "gamma-")
+        for letter in ["delta", "alpha", "beta", "gamma"]:
+            normalized = normalized.replace(f"{letter}--", f"{letter}-")
+        return normalized
+
+    def _match_compound(self, line_lower: str) -> str | None:
+        """Match a line against vocabulary (sorted longest-first) and aliases."""
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
+        for compound in all_compounds:
+            if re.search(rf"\b{re.escape(compound.lower())}\b", line_lower):
+                return compound
+        for canonical, aliases in self.vocabulary["aliases"].items():
+            for alias in aliases:
+                if re.search(rf"\b{re.escape(alias.lower())}\b", line_lower):
+                    return canonical
+        return None
+
     def _extract_compounds(self, lines: list[str]) -> list[str]:
         """
         Extract compound names and percentage values from Gateway Labs COA.
 
-        Gateway Labs tables have different column orders:
-        - Cannabinoids: Compound → CAS# → LOD → LOQ → Result % → mg/g (3rd numeric)
-        - Terpenes: Compound → mg/g → Result % → CAS# → LOD → LOQ (2nd numeric)
+        Gateway Labs has two terpene table formats:
+        - v1 (old): Compound -> LOD -> LOQ -> % -> mg/g (3rd numeric)
+          The "%" column is already absolute % of sample.
+        - v2 (new): Compound -> mg/g -> % -> CAS# -> LOD -> LOQ (2nd numeric)
+          The "%" column is relative composition (% of total terpenes).
+          We convert to absolute: absolute_% = (relative_% / 100) * total_terpenes_%
+
+        Detection: v2 has "CAS#" in the header near the terpene section.
         """
         number_re = re.compile(r"^(\d+\.?\d*)$")
         nd_re = re.compile(r"^ND$", re.IGNORECASE)
@@ -26,14 +58,13 @@ class GatewayParser(BaseParser):
 
         results: list[str] = []
         seen: set[str] = set()
-        # Sort longest-first so specific names (e.g. d8-THC) match before generic (THC)
         all_compounds = sorted(
             self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
-            key=len,
-            reverse=True,
+            key=len, reverse=True,
         )
 
-        # Pass 1a – "Total X: Y %" on a single line
+        # Pass 1a - "Total X: Y %" on a single line
+        total_terpenes_value: float | None = None
         for line in lines:
             m = total_re.search(line)
             if m:
@@ -43,9 +74,13 @@ class GatewayParser(BaseParser):
                 if key not in seen:
                     seen.add(key)
                     results.append(f"{label}: {value}%")
+                    if key == "total terpenes":
+                        try:
+                            total_terpenes_value = float(value)
+                        except ValueError:
+                            pass
 
-        # Pass 1b – "Total X" on one line, numeric value on the next line
-        # Only match cannabinoid/terpene totals to avoid capturing unrelated test totals
+        # Pass 1b - "Total X" on one line, numeric value on the next line
         _valid_totals = {
             "total cannabinoids", "total thc", "total cbd", "total cbn",
             "total cbg", "total cbga", "total cbc", "total cbca",
@@ -70,24 +105,32 @@ class GatewayParser(BaseParser):
                     elif m_val:
                         seen.add(key)
                         results.append(f"{label}: {m_val.group(1)}%")
+                        if key == "total terpenes" and total_terpenes_value is None:
+                            try:
+                                total_terpenes_value = float(m_val.group(1))
+                            except ValueError:
+                                pass
 
-        # Pass 2 – individual compound rows
-        # Track terpene column order variant: some Gateway COAs use
-        # mg/g, Result%, CAS#, LOD, LOQ (2nd numeric) vs LOD, LOQ, Result%, mg/g (3rd numeric)
+        # Pass 2 - individual compound rows
         in_terpene_section = False
         terpene_result_index = 3  # default: 3rd numeric = Result %
+        is_v2_terpene_format = False  # v2 = CAS# detected, values are relative
+        terpene_items: list[tuple[str, float]] = []  # collected for post-conversion
+
         for i, raw_line in enumerate(lines):
-            line_lower = raw_line.strip().lower()
+            line_normalized = self._normalize_name(raw_line.strip())
+            line_lower = line_normalized.lower()
 
             # Detect section boundaries and determine terpene column order
             if re.search(r"terpene", line_lower) and not re.search(r"^total\s", line_lower):
                 if not in_terpene_section:
-                    # First entry into terpene section: detect column variant
                     in_terpene_section = True
-                    terpene_result_index = 3  # default: LOD, LOQ, Result%, mg/g
+                    terpene_result_index = 3  # default v1: LOD, LOQ, Result%, mg/g
+                    is_v2_terpene_format = False
                     for j in range(1, min(11, len(lines) - i)):
                         if "cas#" in lines[i + j].lower():
-                            terpene_result_index = 2  # newer format: mg/g, Result%, CAS#...
+                            terpene_result_index = 2  # v2: mg/g, Result%, CAS#...
+                            is_v2_terpene_format = True
                             break
             elif re.search(r"cannabinoid", line_lower) and not re.search(r"^total\s", line_lower):
                 in_terpene_section = False
@@ -99,21 +142,18 @@ class GatewayParser(BaseParser):
                 continue
 
             # Match against vocabulary (sorted longest-first)
-            matched: str | None = None
-            for compound in all_compounds:
-                if re.search(rf"\b{re.escape(compound.lower())}\b", line_lower):
-                    matched = compound
-                    break
+            matched: str | None = self._match_compound(line_lower)
 
-            # Match against aliases
+            # If no match, try normalizing Greek letters and matching again
             if matched is None:
-                for canonical, aliases in self.vocabulary["aliases"].items():
-                    for alias in aliases:
-                        if re.search(rf"\b{re.escape(alias.lower())}\b", line_lower):
-                            matched = canonical
-                            break
-                    if matched:
-                        break
+                line_norm = self._normalize_name(line).lower()
+                matched = self._match_compound(line_norm)
+
+            # Gateway v1 uses spaces in terpene names ("alpha pinene" vs "alpha-Pinene").
+            # Try replacing spaces with hyphens in known patterns.
+            if matched is None and in_terpene_section:
+                space_fixed = re.sub(r"(alpha|beta|gamma|delta)\s+", r"\1-", line_lower)
+                matched = self._match_compound(space_fixed)
 
             if matched is None or matched.lower() in seen:
                 continue
@@ -136,15 +176,54 @@ class GatewayParser(BaseParser):
                     value = "ND"
                     break
 
+                # v1 format: skip <LOQ / <value lines (below threshold)
+                if candidate_line.startswith("<") and numeric_count >= target_numeric - 1:
+                    value = "ND"
+                    break
+
             seen.add(matched.lower())
             if value == "ND":
                 pass  # skip ND compounds
             elif value:
-                results.append(f"{matched}: {value}")
+                if in_terpene_section:
+                    try:
+                        val_pct = float(value.rstrip("%"))
+                        terpene_items.append((matched, val_pct))
+                    except ValueError:
+                        pass
+                else:
+                    results.append(f"{matched}: {value}")
             else:
                 results.append(matched)
 
-        return results
+        # Post-process terpenes:
+        # Gateway v2: "Result %" is relative composition (% of total terpenes).
+        #   Convert: absolute_% = (relative_% / 100) * total_terpenes_%
+        # Gateway v1: "Result %" is already absolute % of sample. No conversion.
+        if terpene_items and is_v2_terpene_format and total_terpenes_value is not None and total_terpenes_value > 0:
+            # v2: convert relative to absolute
+            conversion_factor = total_terpenes_value / 100.0
+            for name, rel_pct in terpene_items:
+                abs_pct = rel_pct * conversion_factor
+                if abs_pct >= 0.001:
+                    results.append(f"{name}: {abs_pct:.4g}%")
+        else:
+            # v1 or no Total Terpenes: values are already absolute
+            for name, val in terpene_items:
+                if val >= 0.001:
+                    results.append(f"{name}: {val}%")
+
+        # Post-filter: remove compounds with percentage values below 0.001%
+        filtered: list[str] = []
+        for item in results:
+            m = re.search(r":\s*(\d+\.?\d*)%$", item)
+            if m:
+                pct = float(m.group(1))
+                if pct < 0.001:
+                    continue
+            filtered.append(item)
+
+        return filtered
 
     def parse(self, lines: list[str]) -> dict[str, Any]:
         compounds = self._extract_compounds(lines)

@@ -39,7 +39,10 @@ class BaselineParser(BaseParser):
 
     def _match_compound(self, line_lower: str) -> str | None:
         """Match a line against vocabulary and aliases. Returns canonical name or None."""
-        all_compounds = self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"]
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
 
         for compound in all_compounds:
             if re.search(rf"\b{re.escape(compound.lower())}\b", line_lower):
@@ -57,14 +60,44 @@ class BaselineParser(BaseParser):
         Extract compound names and percentage values from Baseline Labs COA.
 
         Strategy:
-        1. Detect section headers (Cannabinoid, Terpenes)
-        2. For each compound line, the next line is Result %
-        3. ND on the value line = not detected, skip
+        1. Extract summary totals (Total THC, Total CBD, Total Cannabinoids, Total Terpenes)
+        2. Detect section headers (Cannabinoid, Terpenes)
+        3. For each compound line, the next line is Result %
+        4. ND on the value line = not detected, skip
         """
         nd_re = re.compile(r"^ND$", re.IGNORECASE)
         number_re = re.compile(r"^(\d+\.?\d*)$")
+        total_re = re.compile(r"(Total\s+[\w\s-]+?):\s*(\d+\.?\d*)\s*%", re.IGNORECASE)
         results: list[str] = []
         seen: set[str] = set()
+
+        # Pass 0 – Extract summary totals (Total THC, Total CBD, Total Cannabinoids, Total Terpenes)
+        _valid_totals = {
+            "total cannabinoids", "total thc", "total cbd", "total terpenes",
+        }
+        for line in lines:
+            m = total_re.search(line)
+            if m:
+                label = m.group(1).strip()
+                value = m.group(2)
+                key = label.lower()
+                if key in _valid_totals and key not in seen:
+                    seen.add(key)
+                    results.append(f"{label}: {value}%")
+
+        # Pass 0b – Adjacent-line totals: "TOTAL THC" on one line, numeric on next
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            m = re.match(r"^(Total\s+[\w\s-]+?)\s*$", stripped, re.IGNORECASE)
+            if m and i + 1 < len(lines):
+                label = m.group(1).strip()
+                key = label.lower()
+                if key in _valid_totals and key not in seen:
+                    next_line = lines[i + 1].strip()
+                    m_val = number_re.match(next_line)
+                    if m_val:
+                        seen.add(key)
+                        results.append(f"{label}: {m_val.group(1)}%")
 
         in_section = False
 

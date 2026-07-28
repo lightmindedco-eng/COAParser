@@ -62,9 +62,9 @@ def detect_product_name(lines: list[str]) -> str | None:
                 if len(product_name) > 3 and len(product_name) < 250:
                     return _clean_product_name(product_name)
 
-    # Pass 2: "Strain:" label (Aerolabs / Confident LIMS)
+    # Pass 2: "Strain:" or "Strain Name:" label (Aerolabs / Confident LIMS / HighRes Labs)
     for line in lines[:50]:
-        if re.match(r"strain\s*:", line, re.IGNORECASE):
+        if re.match(r"strain\s*(?:name)?\s*:", line, re.IGNORECASE):
             parts = line.split(":", 1)
             if len(parts) == 2:
                 product_name = parts[1].strip()
@@ -90,6 +90,15 @@ def detect_product_name(lines: list[str]) -> str | None:
                 if len(joined) > 3 and not re.match(r"^[\d/\s:.-]+$", joined):
                     return _clean_product_name(joined)
             break
+
+    # Pass 3b: "Description:" label (Sunrise Labs / Bee Elevated Results format)
+    for i, line in enumerate(lines[:100]):
+        if re.match(r"description\s*:", line, re.IGNORECASE):
+            if i + 1 < len(lines):
+                candidate = lines[i + 1].strip()
+                if candidate and 3 < len(candidate) < 250:
+                    if not re.match(r"^[\d/\s:.-]+$", candidate):
+                        return _clean_product_name(candidate)
 
     # Pass 4: product keyword + dash heuristic (fallback)
     _product_keywords = {
@@ -151,11 +160,18 @@ def detect_company_name(lines: list[str]) -> str | None:
 
     Pass 1 – Known patterns (LLC, Inc, Corp) in first 10 lines
     Pass 2 – Line right after "Certificate of Analysis" header (most formats)
+    Pass 3 – "Client" / "Client Name" label followed by company name
     """
     # Pass 1: Known company patterns (LLC, Inc, Corp) in first 10 lines
     for line in lines[:10]:
         line_stripped = line.strip()
         if re.search(r"\b(LLC|Inc\.?|Corp\.?|Co\.?|Company)\b", line_stripped, re.IGNORECASE):
+            # Skip lines that start with labels like "Client Name:" — Pass 3 will handle
+            if re.match(r"^client\s*(?:name)?\s*:", line_stripped, re.IGNORECASE):
+                continue
+            # Skip metadata lines like "Report Version: 1.2"
+            if re.match(r"^report\s+version\s*:", line_stripped, re.IGNORECASE):
+                continue
             if 3 < len(line_stripped) < 80:
                 return line_stripped
 
@@ -172,15 +188,35 @@ def detect_company_name(lines: list[str]) -> str | None:
                 if re.search(r"page\s*\d|powered\s+by|sample|strain|final|pass\b|fail\b|^\d+\s+of\s+\d+$|batch|compliance|production|manifest", candidate, re.IGNORECASE):
                     continue
                 # Skip lines that look like addresses, phone numbers, or dates
-                if re.search(r"\d{3}[\s.-]\d{3}[\s.-]\d{4}|^\d+\s+\w+\s+(st|rd|ave|blvd|dr)|date|released|^\d+/|order\s*#|\b(oklahoma|ok|ca|co|nv|mi)\s+\d{5}\b|\d+\s+\w+\s+(st|street|road|rd|avenue|ave|blvd|drive|dr|ln|lane|way|ct|circle)\b", candidate, re.IGNORECASE):
+                if re.search(r"\d{3}[\s.-]\d{3}[\s.-]\d{4}|^\d+\s+\w+\s+(st|rd|ave|blvd|dr)|date|released|^\d+/|order\s*#|\b(oklahoma|ok|ca|co|nv|mi)\s+\d{5}\b|\d+\s+\w+\s+(st|street|road|rd|avenue|ave|blvd|drive|dr|ln|lane|way|ct|circle)\b|^\d{3}\s+\w+\s+\w+\s+(st|street|road|rd|avenue|ave|blvd|drive|dr|ln|lane|way|ct|circle)\b|broadway\s+extension", candidate, re.IGNORECASE):
                     continue
                 # Skip license lines
-                if re.search(r"lic\.?\s*#|omma|report\s*#", candidate, re.IGNORECASE):
+                if re.search(r"lic\.?\s*#|omma|report\s*#|http|www\.|\.com", candidate, re.IGNORECASE):
+                    continue
+                # Skip lines that are clearly not company names
+                if re.search(r"^(requested|comprehensive|estimated|sampling|sop|errors|report\s+version|potency|terpenes?|cannabinoids?|residual\s+solvents?|pesticides?|heavy\s+metals?|microbiology|moisture|water\s+activity|foreign\s+material|mycotoxins|contamination|tested|pass\b|fail\b|complete|analyte|result|method|limit|not\s+detected|certificate|summary|page\s+\d)", candidate, re.IGNORECASE):
                     continue
                 # Looks like a company name (short, no numbers except in abbreviations)
                 if 3 < len(candidate) < 80:
                     return candidate
             break
+
+    # Pass 3: "Client" / "Client Name" followed by or containing company name
+    for i, line in enumerate(lines[:50]):
+        # "Client Name: Company Name, LLC" — value on same line
+        m = re.match(r"^client\s*(?:name)?\s*:\s*(.+)$", line.strip(), re.IGNORECASE)
+        if m:
+            candidate = m.group(1).strip()
+            if candidate and 3 < len(candidate) < 80:
+                if not re.search(r"^\d|sample|batch|metrc|http|lic", candidate, re.IGNORECASE):
+                    return candidate
+        # "Client Name" on one line, company on next
+        if re.match(r"^client\s*(?:name)?\s*:?\s*$", line.strip(), re.IGNORECASE):
+            if i + 1 < len(lines):
+                candidate = lines[i + 1].strip()
+                if candidate and 3 < len(candidate) < 80:
+                    if not re.search(r"^\d|sample|batch|metrc|http|lic", candidate, re.IGNORECASE):
+                        return candidate
 
     return None
 
@@ -189,27 +225,57 @@ def detect_report_date(lines: list[str]) -> str | None:
     """
     Extract the report date from COA lines.
 
-    Looks for patterns like:
+    High-priority patterns (return immediately):
     - "Report Created: MM/DD/YYYY"
     - "Report Date: MM/DD/YYYY"
     - "Released: MM/DD/YYYY"
+    - "Completed: MM/DD/YYYY"
+
+    Low-priority patterns (return only if no high-priority found):
     - "Date Released: MM/DD/YYYY"
+    - "Date Received: MM/DD/YYYY"
+    - "Date Tested: MM/DD/YYYY"
+    - "Date Analyzed: MM/DD/YYYY"
     """
-    for line in lines[:300]:
-        # "Report Created: MM/DD/YYYY"
+    # Pass 1: High-priority report date patterns
+    for i, line in enumerate(lines[:300]):
         m = re.search(r"report\s+created\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
         if m:
             return m.group(1)
-        # "Report Date: MM/DD/YYYY"
         m = re.search(r"report\s+date\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
         if m:
             return m.group(1)
-        # "Released: MM/DD/YYYY"
         m = re.search(r"released?\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
         if m:
             return m.group(1)
-        # "Date Released: MM/DD/YYYY"
+        m = re.search(r"completed\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        # Date on next line: "Date Reported:\n4/14/2026"
+        if re.match(r"^date\s+reported\s*:?\s*$", line.strip(), re.IGNORECASE):
+            if i + 1 < len(lines):
+                m2 = re.search(r"(\d{1,2}/\d{1,2}/\d{4})", lines[i + 1])
+                if m2:
+                    return m2.group(1)
+
+    # Pass 2: Lower-priority date patterns (Date Released/Received/Tested/Analyzed)
+    for i, line in enumerate(lines[:300]):
         m = re.search(r"date\s+released?\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
         if m:
             return m.group(1)
+        m = re.search(r"date\s+received\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        m = re.search(r"date\s+tested\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        m = re.search(r"date\s+analyzed\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", line, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        # Date on next line: "Date Received:\n3/11/2026"
+        if re.match(r"^date\s+(?:received|tested|analyzed|released)\s*:?\s*$", line.strip(), re.IGNORECASE):
+            if i + 1 < len(lines):
+                m2 = re.search(r"(\d{1,2}/\d{1,2}/\d{4})", lines[i + 1])
+                if m2:
+                    return m2.group(1)
     return None

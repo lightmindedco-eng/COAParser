@@ -25,7 +25,10 @@ class AerolabsParser(BaseParser):
 
     def _match_compound(self, line_lower: str) -> str | None:
         """Match a line against vocabulary and aliases. Returns canonical name or None."""
-        all_compounds = self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"]
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
 
         for compound in all_compounds:
             if re.search(rf"\b{re.escape(compound.lower())}\b", line_lower):
@@ -77,18 +80,54 @@ class AerolabsParser(BaseParser):
                     seen.add(key)
                     results.append(f"{label}: {value}%")
 
-        # Pass 1b – "Total X" on one line, "Y %" on next line (Condent LIMS summary)
+        # Pass 1b – Value-label or label-value patterns on adjacent lines
+        # Aerolabs layout: value THEN label (e.g., "47.12%" / "Total THC")
+        # Confident layout: label THEN value (e.g., "Total THC" / "ND" or "25.81%")
+        # Detect layout by checking the first "Total X" line found:
+        #   - If the line BEFORE it is a percentage → Aerolabs (value-before-label)
+        #   - If the line AFTER it is a percentage or ND → Confident (label-before-value)
+        pct_re = re.compile(r"^(\d+\.?\d*)\s*%$")
+        layout = None  # "value_before" or "value_after"
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            m_total = re.match(r"^Total\s+([\w\s-]+)$", line_stripped, re.IGNORECASE)
+            if m_total:
+                prev_is_pct = i > 0 and pct_re.match(lines[i - 1].strip())
+                next_is_pct = i + 1 < len(lines) and pct_re.match(lines[i + 1].strip())
+                if prev_is_pct and not next_is_pct:
+                    layout = "value_before"
+                elif next_is_pct and not prev_is_pct:
+                    layout = "value_after"
+                elif prev_is_pct and next_is_pct:
+                    # Both sides have percentages — check if prev is Total Cannabinoids-like
+                    # In Aerolabs, the value before "Total THC" is the actual Total THC value
+                    layout = "value_before"
+                break
+
+        if layout is None:
+            layout = "value_after"  # default to old behavior
+
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             m_total = re.match(r"^Total\s+([\w\s-]+)$", line_stripped, re.IGNORECASE)
             if m_total and i + 1 < len(lines):
                 label = m_total.group(1).strip()
-                next_line = lines[i + 1].strip()
-                m_val = re.match(r"^(\d+\.?\d*)\s*%$", next_line)
-                if m_val:
-                    # Use "total <label>" as key to avoid blocking the compound itself
-                    key = f"total {label.lower()}"
-                    if key not in seen:
+                key = f"total {label.lower()}"
+                if key in seen:
+                    continue
+                if layout == "value_before":
+                    # Aerolabs: value is on the line BEFORE the label
+                    if i > 0:
+                        prev_line = lines[i - 1].strip()
+                        m_val = pct_re.match(prev_line)
+                        if m_val:
+                            seen.add(key)
+                            results.append(f"Total {label}: {m_val.group(1)}%")
+                else:
+                    # Confident: value is on the line AFTER the label
+                    next_line = lines[i + 1].strip()
+                    m_val = pct_re.match(next_line)
+                    if m_val:
                         seen.add(key)
                         results.append(f"Total {label}: {m_val.group(1)}%")
 
@@ -108,8 +147,10 @@ class AerolabsParser(BaseParser):
             if (re.search(r"^cannabinoid", line_lower) or re.search(r"^terpene", line_lower)) and not re.search(r"^total", line_lower):
                 result_index = 2  # default
                 mg_unit_mode = False
-                # Look ahead for "LOD" in header → means LOD, LOQ, Result%, ... (3rd numeric)
-                # Also look for "mg/unit" → means no Result % column, values in mg/unit
+                # Look ahead for header keywords to determine column layout:
+                # - "lod" at start → LOD, LOQ, Result%, ... (3rd numeric)
+                # - "mg/unit" without "%" → no Result % column, values in mg/unit
+                # - "result (%)" appearing before "lod"/"loq" → Result% is 1st numeric
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower):
@@ -117,6 +158,15 @@ class AerolabsParser(BaseParser):
                         break
                     if "mg/unit" in ahead_lower and "%" not in ahead_lower:
                         mg_unit_mode = True
+                    # HighRes Labs: "Result (%)" before "LOQ" or "LOD" → Result% is 1st
+                    if re.match(r"^result\s*\(%\)", ahead_lower):
+                        # Check if lod/loq appear AFTER this line
+                        for k in range(j + 1, min(j + 5, len(lines) - i)):
+                            later = lines[i + k].strip().lower()
+                            if re.match(r"^(lod|loq)\b", later):
+                                result_index = 1
+                                break
+                        break
                     # Stop searching once we hit compound data or another section
                     if (self._match_compound(ahead_lower) or re.search(r"^(cannabinoid|terpene)", ahead_lower)) and not re.search(r"^total", ahead_lower):
                         break
@@ -140,14 +190,24 @@ class AerolabsParser(BaseParser):
                 combined = f"{raw_line} {next_line}".lower()
                 combined_normalized = self._normalize_name(combined)
 
-                # Only join if the next line looks like it has numeric data (not another compound)
-                if inline_values_re.search(next_line) and not self._match_compound(next_normalized.lower()):
+                # Join conditions:
+                # 1. Next line has numeric data and isn't another compound (existing logic)
+                # 2. Current line is a Greek letter prefix (e.g., "β-") — always join
+                greek_prefix = re.match(r"^[αβγδ]\s*[-–]?\s*$", raw_line.strip())
+                if greek_prefix:
+                    joined = f"{raw_line.rstrip('- \t')}-{next_line}".lower()
+                    joined_normalized = self._normalize_name(joined)
+                    matched = self._match_compound(joined_normalized)
+                    if matched is not None:
+                        raw_line = joined
+                        line_lower = joined_normalized.lower()
+                        i += 1
+                elif inline_values_re.search(next_line) and not self._match_compound(next_normalized.lower()):
                     matched = self._match_compound(combined_normalized)
                     if matched is not None:
-                        # Use the combined line for value extraction
                         raw_line = combined
                         line_lower = combined_normalized.lower()
-                        i += 1  # consume the continuation line
+                        i += 1
 
             if matched is None or matched.lower() in seen:
                 i += 1
@@ -181,7 +241,9 @@ class AerolabsParser(BaseParser):
 
             # Extract inline numeric values from the (possibly combined) line
             if value is None and not below_loq:
-                inline_matches = inline_values_re.findall(raw_line)
+                # Skip lines that are primarily date patterns (e.g. "3/11/2026")
+                is_date_line = re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
+                inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
 
                 # Filter: keep decimal numbers or multi-digit integers; skip single-digit
                 # integers that are likely part of compound names (e.g., "9" from "d9-THC")
@@ -233,6 +295,9 @@ class AerolabsParser(BaseParser):
                     if re.match(r"^NR$", candidate_line, re.IGNORECASE):
                         value = "ND"
                         break
+                    # Skip date patterns (e.g. "3/11/2026") — they contain numeric-looking values
+                    if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
+                        continue
                     m_num = number_re.match(candidate_line)
                     if m_num:
                         numeric_count += 1

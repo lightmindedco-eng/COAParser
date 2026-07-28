@@ -9,6 +9,12 @@
     "CBGA": ["cannabigerolic acid", "cbg-a"],
     "CBC": ["cannabichromene"],
     "CBN": ["cannabinol"],
-    "THCV": ["tetrahydrocannabivarin", "thc-v"]
+    "THCV": ["tetrahydrocannabivarin", "thc-v"],
+    "alpha-Humulene": ["Humulene", "humulene"],
+    "alpha-Pinene": ["a-pinene", "a pinene"],
+    "beta-Pinene": ["b-pinene", "b pinene"],
+    "beta-Caryophyllene": ["b-caryophyllene", "b caryophyllene", "caryophyllene"],
+    "gamma-Terpinene": ["g-terpinene", "g terpinene"],
+    "Limonene": ["d-limonene", "d limonene"]
   }
 }

@@ -64,7 +64,10 @@ class BaseParser:
 
         results: list[str] = []
         seen: set[str] = set()
-        all_compounds = self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"]
+        all_compounds = sorted(
+            self.vocabulary["cannabinoids"] + self.vocabulary["terpenes"],
+            key=len, reverse=True,
+        )
 
         # Pass 1 – clean "Total X: Y %" summary lines (most reliable)
         for line in lines:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -61,7 +62,73 @@ class COAParser:
         return result
 
 
+def _post_process_terpenes(items: list[str]) -> list[str]:
+    """Compute Total Terpenes if missing; validate no individual > total."""
+    # Separate cannabinoids and terpenes
+    cannabinoids: list[str] = []
+    terpenes: list[str] = []
+    has_total_terpenes = False
+
+    for item in items:
+        if _is_terpene(item):
+            if item.split(":")[0].strip().lower() == "total terpenes":
+                has_total_terpenes = True
+            terpenes.append(item)
+        else:
+            cannabinoids.append(item)
+
+    # Parse individual terpene percentages
+    terpene_values: list[tuple[str, float, str]] = []  # (name, pct, original_item)
+    for t in terpenes:
+        name = t.split(":")[0].strip()
+        if name.lower() == "total terpenes":
+            continue
+        m = re.search(r":\s*(\d+\.?\d*)%$", t)
+        if m:
+            terpene_values.append((name, float(m.group(1)), t))
+
+    # Compute total if missing
+    if not has_total_terpenes and terpene_values:
+        computed_total = sum(pct for _, pct, _ in terpene_values)
+        if computed_total > 0:
+            terpenes = [f"Total Terpenes: {computed_total:.4g}%"] + terpenes
+
+    # Validate: no individual terpene should exceed Total Terpenes
+    # Find the Total Terpenes value
+    total_terp_pct = 0.0
+    for t in terpenes:
+        if t.split(":")[0].strip().lower() == "total terpenes":
+            m = re.search(r":\s*(\d+\.?\d*)%", t)
+            if m:
+                total_terp_pct = float(m.group(1))
+            break
+
+    if total_terp_pct > 0:
+        validated_terpenes: list[str] = []
+        for t in terpenes:
+            name = t.split(":")[0].strip()
+            if name.lower() == "total terpenes":
+                validated_terpenes.append(t)
+                continue
+            m = re.search(r":\s*(\d+\.?\d*)%", t)
+            if m:
+                pct = float(m.group(1))
+                if pct > total_terp_pct:
+                    # Cap individual terpene at total (shouldn't happen, but safety check)
+                    validated_terpenes.append(f"{name}: {total_terp_pct:.4g}%")
+                else:
+                    validated_terpenes.append(t)
+            else:
+                validated_terpenes.append(t)
+        terpenes = validated_terpenes
+
+    return cannabinoids + terpenes
+
+
 def _build_report(filename: str, format_name: str, items: list[str]) -> str:
+    # Post-process: compute Total Terpenes if missing, validate individual terpenes
+    items = _post_process_terpenes(items)
+
     lines: list[str] = [
         "=" * 60,
         f"COA Parser Report",
