@@ -15,9 +15,9 @@ def test_parse_file_writes_output(tmp_path: Path) -> None:
     result = parser.parse_file(input_file, output_dir=str(output_dir))
 
     assert result.format_name == "gateway"
-    output_file = output_dir / input_file.name
-    assert output_file.exists()
-    assert "Gateway test document" in output_file.read_text(encoding="utf-8")
+    output_files = list(output_dir.glob("*.txt"))
+    assert len(output_files) == 1
+    assert "Gateway test document" in output_files[0].read_text(encoding="utf-8")
 
 
 def test_parse_file_extracts_compounds_from_coa_text(tmp_path: Path) -> None:

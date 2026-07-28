@@ -5,11 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from src.core.detector import detect_format, detect_product_name
+from src.core.detector import detect_format, detect_product_name, detect_company_name, detect_report_date
 from src.core.extractor import extract_text, read_text
 from src.core.writer import write_output
 from src.models.result import ParsedResult
 from src.parsers.aerolabs import AerolabsParser
+from src.parsers.baseline import BaselineParser
 from src.parsers.confident import ConfidentParser
 from src.parsers.gateway import GatewayParser
 
@@ -18,6 +19,7 @@ class COAParser:
     def __init__(self) -> None:
         self.parsers = {
             "aerolabs": AerolabsParser(),
+            "baseline": BaselineParser(),
             "gateway": GatewayParser(),
             "confident": ConfidentParser(),
         }
@@ -28,6 +30,8 @@ class COAParser:
         lines = extract_text(content)
         format_name = detect_format(content)
         product_name = detect_product_name(lines)
+        company_name = detect_company_name(lines)
+        report_date = detect_report_date(lines)
         parser = self.parsers.get(format_name, self.parsers["aerolabs"])
         parsed = parser.parse(lines)
 
@@ -38,12 +42,20 @@ class COAParser:
                 "line_count": len(lines),
                 "source_file": str(path),
                 "product_name": product_name,
+                "company_name": company_name,
+                "report_date": report_date,
             },
         )
 
         if output_dir is not None:
             report = _build_report(path.name, format_name, result.items)
-            output_path = write_output(output_dir, path.name, report, product_name)
+            output_path = write_output(
+                output_dir, path.name, report,
+                product_name=product_name,
+                company_name=company_name,
+                lab_name=format_name,
+                report_date=report_date,
+            )
             result.output_path = str(output_path)
 
         return result
