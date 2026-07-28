@@ -102,21 +102,21 @@ def detect_product_name(lines: list[str]) -> str | None:
 
 
 def _clean_product_name(name: str) -> str:
-    """Clean up product name by removing common company/metadata prefixes."""
-    # Remove common company name patterns at the start
+    """Clean up product name by removing common metadata prefixes/suffixes."""
+    # Remove common metadata labels at the start
     patterns_to_remove = [
         r"^(LLC|Inc|Inc\.|Corp|Corp\.|Co\.|Company|Brand|Producer|Grower)\s*-?\s*",
         r"^(Email|Date|Tested|Sample)\s*[:\-]?\s*",
-        # Company name followed by dash (e.g., "Company Name - Product")
-        r"^[A-Z][A-Za-z]*(,?\s+[A-Za-z]+)*\s*-\s+",
     ]
     
     cleaned = name
     for pattern in patterns_to_remove:
         match = re.match(pattern, cleaned)
         if match:
-            cleaned = cleaned[match.end():]
-            break  # Only apply the first matching pattern
+            candidate = cleaned[match.end():].strip()
+            if len(candidate) >= 5:
+                cleaned = candidate
+            break
     
     # Also remove common suffixes that are metadata
     suffix_patterns = [
