@@ -10,6 +10,10 @@ def detect_format(content: str) -> str:
     lowered = content.lower()
     if "sunrise labs" in lowered and "mg/unit" in lowered:
         return "sunrise"
+    if "highres labs" in lowered:
+        return "highres"
+    if "metis qa" in lowered:
+        return "metis_qa"
     if "aerolabs" in lowered:
         return "aerolabs"
     if "gateway" in lowered or "gatewaylabs" in lowered:
@@ -82,10 +86,21 @@ def detect_product_name(lines: list[str]) -> str | None:
 
     # Pass 3: "Strain:" or "Strain Name:" label (Aerolabs / Confident LIMS / HighRes Labs)
     # Also look ahead for a fuller product description line nearby.
+    # Also look at the line BEFORE Strain: (Confident LIMS puts description on line before)
     for i, line in enumerate(lines[:50]):
         if re.match(r"strain\s*(?:name)?\s*:", line, re.IGNORECASE):
             parts = line.split(":", 1)
             strain_value = parts[1].strip() if len(parts) == 2 else ""
+
+            # Look at the line BEFORE Strain: for a fuller product description (Confident LIMS)
+            if i > 0:
+                prev = lines[i - 1].strip()
+                if prev and ":" not in prev and len(prev) > len(strain_value or ""):
+                    if not re.search(r"^(type|category|sample|matrix|license|metrc|strain|batch|date)", prev, re.IGNORECASE):
+                        if len(prev) > 3:
+                            candidate = _clean_product_name(prev)
+                            if len(candidate) > 3 and len(candidate) < 250:
+                                return candidate
 
             # Look ahead for a fuller description line (no colon, longer, has " - " separator)
             for j in range(i + 1, min(i + 15, len(lines))):
@@ -165,6 +180,7 @@ def _clean_product_name(name: str) -> str:
     patterns_to_remove = [
         r"^(LLC|Inc|Inc\.|Corp|Corp\.|Co\.|Company|Brand|Producer|Grower)\s*-?\s*",
         r"^(Email|Date|Tested|Sample)\s*[:\-]?\s*",
+        r"^\(Sample\)\s*",
     ]
     
     cleaned = name
@@ -183,6 +199,34 @@ def _clean_product_name(name: str) -> str:
     ]
     for pattern in suffix_patterns:
         cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    
+    # Remove trailing batch codes (alphanumeric with at least one digit, like CL0602)
+    cleaned = re.sub(r"\s+[A-Z]*[0-9][A-Z0-9]*$", "", cleaned)
+    
+    # Normalize whitespace around " - " separators
+    cleaned = re.sub(r"\s*-\s+", " - ", cleaned)
+    cleaned = re.sub(r"\s+-\s*", " - ", cleaned)
+    # Insert spaces around dashes between mixed-case components (e.g., "2G-LEMON" -> "2G - LEMON")
+    cleaned = re.sub(r"(?<=[A-Z0-9])-(?=[A-Z])", " - ", cleaned)
+    # Clean up multiple consecutive dashes
+    cleaned = re.sub(r"\s*-\s*-\s*", " - ", cleaned)
+
+    # Apply title case if the name is all uppercase (OCR artifact)
+    if cleaned.isupper() and len(cleaned) > 5:
+        parts = cleaned.split(" - ")
+        cased_parts = []
+        for part in parts:
+            sub_parts = part.split()
+            cased_sub = []
+            for w in sub_parts:
+                if w.isupper() and len(w) <= 2:
+                    cased_sub.append(w)
+                elif re.match(r'^[A-Z][a-z]+$', w):
+                    cased_sub.append(w)
+                else:
+                    cased_sub.append(w.capitalize() if w[0].isalpha() else w)
+            cased_parts.append(" ".join(cased_sub))
+        cleaned = " - ".join(cased_parts)
     
     return cleaned.strip()
 

@@ -1,0 +1,81 @@
+=== Error Report ===
+Date:    2026-07-29 14:36:55
+Input:   Input\1A40E0100004FB3000027848.pdf
+Output:  Output\(Choctaw Processing, LLC)Strawberry Haze & Blueberry Certz(aerolabs)(02-04-2026).txt
+
+Description:
+  The Product Name should be "Vape | 2.0g Disposable | Bodega Boyz - Strawberry Haze & Blueberry Certz"
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:38:12
+Input:   Input\1A40E0100004FB3000023361.pdf
+Output:  Output\(Choctaw Processing, LLC)Splash(aerolabs)(05-09-2025).txt
+
+Description:
+  The Product Name should be "FG | Pre-Roll | Infused | Jubel - Splash"
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:39:36
+Input:   Input\1A40E01000023FB000017383.pdf
+Output:  Output\(Cicada Labs, LLC)DK Smash(aerolabs)(03-16-2026).txt
+
+Description:
+  When showing something in the Concentrates & Extracts categories, please add the type of Concentrate in the Product name i.e. for here the full name would be "Live Rosin Batter - DK Smash"
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:41:25
+Input:   Input\1A40E0100014CDB000009959.pdf
+Output:  Output\(Dynamo Distribution)LEMON CHERRY(aerolabs)(01-19-2026).txt
+
+Description:
+  The Product Name should read "Space Ape 2G - Lemon Cherry"
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:42:28
+Input:   Input\1A40E01000021A9000024105.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Bittersweet(aerolabs)(04-17-2026).txt
+
+Description:
+  The output is showing the Result mg/g as a percent instead of properly showing the Result % causing the percentages for Terpenes to be incorrect.
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:43:42
+Input:   Input\1A40E01000021A9000022595.pdf
+Output:  Output\(Emerald Technologies Inc)Emerald Technologies - Flower and Buds - Mac Truck - (g)(aerolabs)(01-12-2026).txt
+
+Description:
+  The Output is showing the Result PPM for Terpenes instead of properly showing Result % for the Output.
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:44:59
+Input:   Input\1A40E01000021A9000024251.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Lilac Diesel(aerolabs)(04-28-2026).txt
+
+Description:
+  It seems like part of the issue is that Metis QA Laboratory testing needs a separate parser because these results are going to Aerolabs which is not reading the file correctly.
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:47:13
+Input:   Input\1A40E01000170CD000007028.pdf
+Output:  Output\(Green Dynasty, LLC)GLAZED ICE - 0.5g(aerolabs)(03-19-2025).txt
+
+Description:
+  It seems like we will need a new parser for Highres Labs as well because this is another testing lab with a separate format. The Terpene % is being parsed incorrectly and is using the mg/g again instead of the %
+
+==================
+=== Error Report ===
+Date:    2026-07-29 14:48:21
+Input:   Input\1A40E0100004B19000045322.pdf
+Output:  Output\(JKJ PROCESSING INC)Green Apple(aerolabs)(01-08-2025).txt
+
+Description:
+  Soft Chew categorized items need to show mg results as well as % results the same way all edibles should
+
+==================

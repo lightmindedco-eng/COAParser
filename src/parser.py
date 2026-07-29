@@ -14,6 +14,8 @@ from src.parsers.aerolabs import AerolabsParser
 from src.parsers.baseline import BaselineParser
 from src.parsers.confident import ConfidentParser
 from src.parsers.gateway import GatewayParser
+from src.parsers.highres import HighresParser
+from src.parsers.metis_qa import MetisQAParser
 from src.parsers.sunrise import SunriseParser
 from src.parsers.ocr_merge import has_embedded_coa_images, extract_ocr_items
 
@@ -23,8 +25,10 @@ class COAParser:
         self.parsers = {
             "aerolabs": AerolabsParser(),
             "baseline": BaselineParser(),
-            "gateway": GatewayParser(),
             "confident": ConfidentParser(),
+            "gateway": GatewayParser(),
+            "highres": HighresParser(),
+            "metis_qa": MetisQAParser(),
             "sunrise": SunriseParser(),
         }
 

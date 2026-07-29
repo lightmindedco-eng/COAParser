@@ -147,14 +147,17 @@ class AerolabsParser(BaseParser):
             line_normalized = self._normalize_name(raw_line)
             line_lower = line_normalized.lower()
 
-            # Detect section headers (cannabinoids, terpenes) and check for LOD column
+            # Detect section headers (cannabinoids, terpenes) and check for column layout
             if (re.search(r"^cannabinoid", line_lower) or re.search(r"^terpene", line_lower)) and not re.search(r"^total", line_lower):
+                is_terpene = bool(re.search(r"^terpene", line_lower))
                 result_index = 2  # default
                 mg_unit_mode = False
                 # Look ahead for header keywords to determine column layout:
                 # - "lod" at start → LOD, LOQ, Result%, ... (3rd numeric)
                 # - "mg/unit" without "%" → no Result % column, values in mg/unit
                 # - "result (%)" appearing before "lod"/"loq" → Result% is 1st numeric
+                # - "ppm" in column headers → terpene values are LOQ, PPM, % (3rd numeric)
+                found_ppm = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower):
@@ -162,6 +165,9 @@ class AerolabsParser(BaseParser):
                         break
                     if "mg/unit" in ahead_lower and "%" not in ahead_lower:
                         mg_unit_mode = True
+                    # PPM in terpene column headers → LOQ, PPM, % layout
+                    if is_terpene and "ppm" in ahead_lower:
+                        found_ppm = True
                     # HighRes Labs: "Result (%)" before "LOQ" or "LOD" → Result% is 1st
                     if re.match(r"^result\s*\(%\)", ahead_lower):
                         # Check if lod/loq appear AFTER this line
@@ -174,6 +180,8 @@ class AerolabsParser(BaseParser):
                     # Stop searching once we hit compound data or another section
                     if (self._match_compound(ahead_lower) or re.search(r"^(cannabinoid|terpene)", ahead_lower)) and not re.search(r"^total", ahead_lower):
                         break
+                if found_ppm:
+                    result_index = 3
 
             # Skip headers, totals, formulas, and metadata lines
             if (
