@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import concurrent.futures
+import hashlib
 import io
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -36,6 +39,9 @@ except ImportError:
     pass
 
 _LARGE_IMAGE_MIN = 1000
+_CACHE_DIR = Path.home() / ".cache" / "coa_parser"
+_MAX_CACHE_ENTRIES = 50
+_MAX_OCR_WORKERS = 3
 
 
 def _setup_tesseract() -> None:
@@ -84,6 +90,73 @@ def _detect_strain(text: str) -> str | None:
     return None
 
 
+def _is_definition_page(text: str) -> bool:
+    return bool(re.search(r"Definitions?\s+of\s+Abbreviated", text, re.IGNORECASE))
+
+
+def _ocr_image(args: tuple) -> tuple[int, str | None, str]:
+    """OCR a single image by xref. Returns (xref, strain, text)."""
+    doc_path, xref, cache_key = args
+
+    # Check cache
+    if cache_key:
+        cached = _load_cache(cache_key)
+        if cached is not None:
+            return (xref, _detect_strain(cached), cached)
+
+    doc = _fitz.open(str(doc_path))
+    base = _fitz.Pixmap(doc, xref)
+    pix = _fitz.Pixmap(_fitz.csRGB, base) if base.n > 4 else base
+    img = _pil.open(io.BytesIO(pix.tobytes("png")))
+    processed = _preprocess(img)
+    text = pytesseract.image_to_string(processed, config="--psm 6 --oem 3")
+    pix = None
+    base = None
+    doc.close()
+
+    if cache_key:
+        _save_cache(cache_key, text)
+
+    return (xref, _detect_strain(text), text)
+
+
+def _cache_path() -> Path:
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    return _CACHE_DIR / "ocr_cache.json"
+
+
+def _load_cache(key: str) -> str | None:
+    try:
+        data = json.loads(_cache_path().read_text(encoding="utf-8"))
+        return data.get(key)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _save_cache(key: str, text: str) -> None:
+    path = _cache_path()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except (json.JSONDecodeError, OSError):
+        data = {}
+    data[key] = text
+    # Evict oldest entries if over limit
+    if len(data) > _MAX_CACHE_ENTRIES:
+        sorted_keys = sorted(data, key=lambda k: 0)  # keep insertion order
+        for old_k in sorted_keys[: len(data) - _MAX_CACHE_ENTRIES]:
+            data.pop(old_k, None)
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def _cache_key(path: str | Path, xref: int) -> str | None:
+    try:
+        mtime = os.path.getmtime(path)
+        raw = f"{Path(path).resolve()}::{xref}::{mtime:.0f}"
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+    except OSError:
+        return None
+
+
 def extract_ocr_items(path: str | Path) -> list[tuple[str, list[str]]]:
     _setup_tesseract()
 
@@ -95,36 +168,39 @@ def extract_ocr_items(path: str | Path) -> list[tuple[str, list[str]]]:
     parser = AerolabsParser()
     doc = _fitz.open(str(path))
 
-    results: dict[str, set[str]] = {}
-
+    # Collect image info
+    image_args: list[tuple] = []
     for page in doc:
         for img_info in page.get_images(full=True):
             xref, _, w, h = img_info[0], img_info[1], img_info[2], img_info[3]
             if w < _LARGE_IMAGE_MIN and h < _LARGE_IMAGE_MIN:
                 continue
-
-            base = _fitz.Pixmap(doc, xref)
-            pix = _fitz.Pixmap(_fitz.csRGB, base) if base.n > 4 else base
-
-            img = _pil.open(io.BytesIO(pix.tobytes("png")))
-            processed = _preprocess(img)
-            text = pytesseract.image_to_string(processed, config="--psm 6 --oem 3")
-
-            strain = _detect_strain(text)
-            if strain:
-                lines = [l.rstrip("\n") for l in text.split("\n")]
-                lines = _split_two_column_lines(lines)
-                parsed = parser.parse(lines)
-                items = [i for i in parsed.get("items", []) if _is_valid_item(i)]
-                if items:
-                    if strain not in results:
-                        results[strain] = set()
-                    results[strain].update(items)
-
-            pix = None
-            base = None
-
+            image_args.append((path, xref, _cache_key(path, xref)))
     doc.close()
+
+    if not image_args:
+        return []
+
+    # OCR all images in parallel
+    ocr_results: list[tuple[int, str | None, str]] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=_MAX_OCR_WORKERS) as ex:
+        ocr_results = list(ex.map(_ocr_image, image_args))
+
+    # Parse each image's text
+    results: dict[str, set[str]] = {}
+    for xref, strain, text in ocr_results:
+        if not strain or _is_definition_page(text):
+            continue
+
+        lines = [l.rstrip("\n") for l in text.split("\n")]
+        lines = _split_two_column_lines(lines)
+        parsed = parser.parse(lines)
+        items = [i for i in parsed.get("items", []) if _is_valid_item(i)]
+        if items:
+            if strain not in results:
+                results[strain] = set()
+            results[strain].update(items)
+
     return [(s, list(items)) for s, items in results.items()]
 
 
