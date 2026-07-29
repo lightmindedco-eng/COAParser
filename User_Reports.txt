@@ -10,3 +10,39 @@ Description:
   Expected (55.39 mg/unit)
 
 ==================
+=== Error Report ===
+Date:    2026-07-29 16:41:40
+Input:   Input\1A40E0100018CF1000001559.pdf
+Output:  Output\(420 Dabz LLC)Shorties - Peach Kush 0.7g(confident)(08-18-2025).txt
+
+Description:
+  Terpenes are reading incorrect column. Showing LOQ% instead of Mass%
+
+==================
+=== Error Report ===
+Date:    2026-07-29 16:43:57
+Input:   Input\1A40E0100006600000010454.pdf
+Output:  Output\(Bee Elevated)1000mg Cookies N Cream Bar(confident)(01-28-2025).txt
+
+Description:
+  Parser using incorrect Unit's, using mg/g instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 16:44:45
+Input:   Input\1A40E0100004FB3000023359.pdf
+Output:  Output\(Choctaw Processing, LLC)FG - Pre-Roll - Infused - Jubel -(confident)(05-09-2025).txt
+
+Description:
+  Using Reporting Unit instead of Mass %. Incorrect values for Terpenes shown
+
+==================
+=== Error Report ===
+Date:    2026-07-29 16:46:21
+Input:   Input\1A40E0100004FB3000027852.pdf
+Output:  Output\(Choctaw Processing, LLC)FG - Vape - 2.0g Disposable - Bodega Boyz - Brooklyn Burner & Lemon Cherry Gelato(confident)(02-04-2026).txt
+
+Description:
+  Clearly the Confident LIMS has been altered and is consistently mis-reporting terpene values using the wrong columns. Need to address that some instances use different layouts and Confident LIMS needs to be aware of different layouts before reading values.
+
+==================

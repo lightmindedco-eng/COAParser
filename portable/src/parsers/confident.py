@@ -1,5 +1,4 @@
 """Parser for Confident-style COA documents (Confident LIMS / Havard Industries)."""
-
 from __future__ import annotations
 
 import logging
@@ -65,31 +64,42 @@ class ConfidentParser(BaseParser):
 
         # Pass 1b – Value-label or label-value patterns on adjacent lines
         pct_re = re.compile(r"^(\d+\.?\d*)\s*%$")
+        mg_unit_re = re.compile(r"^(\d+\.?\d*)\s*mg/unit$", re.IGNORECASE)
         skip_re = re.compile(r"^(pass|fail|mu range|not tested|nd|nr|<loq|safe|pesticide|microbial|mycotoxin|solvent|metal|foreign)", re.IGNORECASE)
         layout = None
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             m_total = re.match(r"^Total\s+([\w\s-]+)$", line_stripped, re.IGNORECASE)
             if m_total:
-                prev_is_pct = False
+                prev_is_val = False
                 for back in range(1, min(i + 1, 6)):
                     candidate = lines[i - back].strip()
-                    if pct_re.match(candidate):
-                        prev_is_pct = True
+                    if pct_re.match(candidate) or mg_unit_re.match(candidate):
+                        prev_is_val = True
                         break
                     if not skip_re.match(candidate):
                         break
-                next_is_pct = i + 1 < len(lines) and pct_re.match(lines[i + 1].strip())
-                if prev_is_pct and not next_is_pct:
+                next_line = lines[i + 1].strip() if i + 1 < len(lines) else ""
+                next_is_val = bool(pct_re.match(next_line) or mg_unit_re.match(next_line))
+                if prev_is_val and not next_is_val:
                     layout = "value_before"
-                elif next_is_pct and not prev_is_pct:
+                elif next_is_val and not prev_is_val:
                     layout = "value_after"
-                elif prev_is_pct and next_is_pct:
+                elif prev_is_val and next_is_val:
                     layout = "value_before"
                 break
 
         if layout is None:
             layout = "value_after"
+
+        def _extract_total_value(line: str) -> str | None:
+            m = pct_re.match(line)
+            if m:
+                return f"{m.group(1)}%"
+            m = mg_unit_re.match(line)
+            if m:
+                return f"{m.group(1)} mg/unit"
+            return None
 
         for i, line in enumerate(lines):
             line_stripped = line.strip()
@@ -102,25 +112,26 @@ class ConfidentParser(BaseParser):
                 if layout == "value_before":
                     for back in range(1, min(i + 1, 6)):
                         prev_line = lines[i - back].strip()
-                        m_val = pct_re.match(prev_line)
-                        if m_val:
+                        total_val = _extract_total_value(prev_line)
+                        if total_val:
                             seen.add(key)
-                            results.append(f"Total {label}: {m_val.group(1)}%")
+                            results.append(f"Total {label}: {total_val}")
                             break
                         if not skip_re.match(prev_line):
                             break
                 else:
                     next_line = lines[i + 1].strip()
-                    m_val = pct_re.match(next_line)
-                    if m_val:
+                    total_val = _extract_total_value(next_line)
+                    if total_val:
                         seen.add(key)
-                        results.append(f"Total {label}: {m_val.group(1)}%")
+                        results.append(f"Total {label}: {total_val}")
 
         # Pass 2 – individual compound rows
         result_index = 2
         mg_unit_mode = False
         mg_unit_items: list[tuple[str, float]] = []
         _section_type = None
+        _first_section_entered = False
 
         i = 0
         while i < len(lines):
@@ -128,18 +139,33 @@ class ConfidentParser(BaseParser):
             line_normalized = self._normalize_name(raw_line)
             line_lower = line_normalized.lower()
 
-            # Detect section headers and check for PPM column layout
+            # Detect section headers and check column layout
             if (re.search(r"^cannabinoid", line_lower) or re.search(r"^terpene", line_lower)) and not re.search(r"^total", line_lower):
                 is_terpene = bool(re.search(r"^terpene", line_lower))
                 _section_type = "terpenes" if is_terpene else "cannabinoids"
                 result_index = 2
                 mg_unit_mode = False
+                # On the very first data-section entry, clear seen and trim results
+                # to only totals (removes false positives from product-name lines).
+                # Do NOT repeat this on subsequent section entries or transitions
+                # so that compounds already extracted are preserved.
+                if not _first_section_entered:
+                    _first_section_entered = True
+                    seen.clear()
+                    results[:] = [r for r in results if r.startswith("Total ")]
+                else:
+                    # Section-to-section transition: only reset seen; keep results
+                    seen.clear()
                 found_ppm = False
+                reporting_limit_mode = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower):
                         result_index = 3
                         break
+                    if re.match(r"^(loq|reporting)\b", ahead_lower):
+                        # LOQ / Reporting Limit is the first data column; Mass% stays at index 2
+                        pass
                     if "mg/unit" in ahead_lower and "%" not in ahead_lower:
                         mg_unit_mode = True
                     if is_terpene and "ppm" in ahead_lower:
@@ -147,12 +173,25 @@ class ConfidentParser(BaseParser):
                     if re.match(r"^result\s*\(%\)", ahead_lower):
                         for k in range(j + 1, min(j + 5, len(lines) - i)):
                             later = lines[i + k].strip().lower()
-                            if re.match(r"^(lod|loq)\b", later):
+                            if re.match(r"^(lod|loq|reporting)\b", later):
                                 result_index = 1
                                 break
                         break
                     if (self._match_compound(ahead_lower) or re.search(r"^(cannabinoid|terpene)", ahead_lower)) and not re.search(r"^total", ahead_lower):
                         break
+                # If we only found "Reporting Limit" (no LOQ/LOD), keep result_index=2 for Mass%
+                if reporting_limit_mode and result_index == 2:
+                    result_index = 2
+
+            # Detect end of cannabinoid/terpene data sections: when a different
+            # test section starts (pesticides, solvents, etc.), stop matching.
+            # Clear section type and seen, but DO NOT touch results – the
+            # compounds already extracted from this section are valid.
+            if _section_type and re.search(r"^(pesticide|residual\s+solvent|microbial|mycotoxin|heavy\s+metal|moisture|water\s+activity|foreign\s+matter|amendment)", line_lower):
+                _section_type = None
+                seen.clear()
+                i += 1
+                continue
 
             if (
                 not line_lower
@@ -160,6 +199,11 @@ class ConfidentParser(BaseParser):
                 or "=" in raw_line
                 or re.search(r"^total\s", line_lower)
             ):
+                i += 1
+                continue
+
+            # Only match compounds inside cannabinoid/terpene data sections
+            if not _section_type:
                 i += 1
                 continue
 
@@ -254,34 +298,37 @@ class ConfidentParser(BaseParser):
                             value = f"{result_values[0]}%"
 
             if value is None and not below_loq:
+                # Multi-line look-ahead: scan following lines for numeric values,
+                # using result_index to pick the correct column. Stop at next compound.
                 ahead = [lines[i + j].strip() if i + j < len(lines) else "" for j in range(1, 13)]
                 numeric_count = 0
-                numeric_values: list[float] = []
+                got_value = False
                 for candidate_line in ahead:
                     if nd_re.match(candidate_line):
                         value = "ND"
+                        got_value = True
                         break
                     if re.match(r"^<(?:LOQ|[\d.]+)", candidate_line, re.IGNORECASE):
                         below_loq = True
+                        got_value = True
                         break
                     if re.match(r"^NR$", candidate_line, re.IGNORECASE):
                         value = "ND"
+                        got_value = True
                         break
                     if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
                         continue
+                    # Stop at next compound name (different from current)
+                    candidate_normalized = self._normalize_name(candidate_line)
+                    candidate_lower = candidate_normalized.lower()
+                    if candidate_lower != line_lower and self._match_compound(candidate_lower):
+                        break
                     m_num = number_re.match(candidate_line)
                     if m_num:
                         numeric_count += 1
-                        numeric_values.append(float(m_num.group(1)))
-                        if numeric_count >= 3 and len(numeric_values) >= 3:
-                            val2 = numeric_values[1]
-                            val3 = numeric_values[2]
-                            if val2 > 0 and 8.5 < (val3 / val2) < 11.5:
-                                value = f"{numeric_values[1]}%"
-                            elif val2 > 0 and (val3 / val2) > 100:
-                                value = f"{numeric_values[1]}%"
-                            else:
-                                value = f"{numeric_values[2]}%"
+                        if numeric_count == result_index:
+                            value = f"{m_num.group(1)}%"
+                            got_value = True
                             break
                     else:
                         inline_nums = inline_values_re.findall(candidate_line)
@@ -291,18 +338,11 @@ class ConfidentParser(BaseParser):
                             if "." in num_str or int(num) >= 10:
                                 if num <= max_val:
                                     numeric_count += 1
-                                    numeric_values.append(num)
-                                    if numeric_count >= 3 and len(numeric_values) >= 3:
-                                        val2 = numeric_values[1]
-                                        val3 = numeric_values[2]
-                                        if val2 > 0 and 8.5 < (val3 / val2) < 11.5:
-                                            value = f"{numeric_values[1]}%"
-                                        elif val2 > 0 and (val3 / val2) > 100:
-                                            value = f"{numeric_values[1]}%"
-                                        else:
-                                            value = f"{numeric_values[2]}%"
+                                    if numeric_count == result_index:
+                                        value = f"{num_str}%"
+                                        got_value = True
                                         break
-                        if value:
+                        if got_value:
                             break
 
             seen.add(matched.lower())
