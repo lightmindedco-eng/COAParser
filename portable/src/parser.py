@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from src.core.detector import detect_format, detect_product_name, detect_company_name, detect_report_date
+from src.core.detector import detect_format, detect_product_name, detect_company_name, detect_metrc_category, detect_report_date
 from src.core.extractor import extract_text, read_text
 from src.core.writer import write_output
 from src.models.result import ParsedResult
@@ -32,6 +32,7 @@ class COAParser:
         format_name = detect_format(content)
         product_name = detect_product_name(lines)
         company_name = detect_company_name(lines)
+        metrc_category = detect_metrc_category(lines)
         report_date = detect_report_date(lines)
         parser = self.parsers.get(format_name, self.parsers["aerolabs"])
         parsed = parser.parse(lines)
@@ -44,12 +45,13 @@ class COAParser:
                 "source_file": str(path),
                 "product_name": product_name,
                 "company_name": company_name,
+                "metrc_category": metrc_category,
                 "report_date": report_date,
             },
         )
 
         if output_dir is not None:
-            report = _build_report(path.name, format_name, result.items)
+            report = _build_report(path.name, format_name, result.items, product_name, metrc_category)
             output_path = write_output(
                 output_dir, path.name, report,
                 product_name=product_name,
@@ -125,7 +127,7 @@ def _post_process_terpenes(items: list[str]) -> list[str]:
     return cannabinoids + terpenes
 
 
-def _build_report(filename: str, format_name: str, items: list[str]) -> str:
+def _build_report(filename: str, format_name: str, items: list[str], product_name: str = "", metrc_category: str = "") -> str:
     # Post-process: compute Total Terpenes if missing, validate individual terpenes
     items = _post_process_terpenes(items)
 
@@ -137,6 +139,9 @@ def _build_report(filename: str, format_name: str, items: list[str]) -> str:
         "=" * 60,
         "",
     ]
+    if product_name:
+        lines.insert(4, f"Product : {product_name.strip()}")
+    lines.insert(5, f"METRC Category : {metrc_category if metrc_category else 'N/A'}")
     if items:
         cannabinoids = [i for i in items if not _is_terpene(i)]
         terpenes = [i for i in items if _is_terpene(i)]
@@ -172,6 +177,7 @@ _TERPENE_NAMES = {
     "beta-caryophyllene", "alpha-humulene", "trans-nerolidol",
     "alpha-bisabolol", "beta-ocimene", "d-limonene", "caryophyllene oxide",
     "alpha-terpinene", "gamma-terpinene", "p-cymene", "alpha-terpineol",
+    "cis-ocimene", "trans-ocimene",
     "total terpenes",
 }
 

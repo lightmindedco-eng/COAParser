@@ -1,0 +1,228 @@
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
+
+from src.models.result import ParsedResult
+
+
+class _BarRow(QWidget):
+    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False) -> None:
+        super().__init__()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 1, 0, 1)
+        layout.setSpacing(6)
+
+        name_label = QLabel(name)
+        name_label.setFixedWidth(180)
+        name_label.setStyleSheet(f"font-size: 12px; font-weight: {'600' if bold else '400'};")
+        layout.addWidget(name_label)
+
+        bar = QFrame()
+        bar.setFixedHeight(22)
+        bar.setStyleSheet(f"""
+            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {color}, stop:1 {color});
+            border-radius: 3px;
+        """)
+        bar.setFixedWidth(max(1, int(pct_of_max * 280)))
+        layout.addWidget(bar, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+
+        val_label = QLabel(f"{value:.3f}%")
+        val_label.setStyleSheet("font-size: 12px;")
+        val_label.setFixedWidth(80)
+        layout.addWidget(val_label)
+
+        layout.addStretch()
+
+
+class _Section(QWidget):
+    def __init__(self, title: str, items: list[tuple[str, float, str]], total_name: str | None = None) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        header = QLabel(title)
+        header.setStyleSheet("font-size: 14px; font-weight: 700; margin-top: 12px; margin-bottom: 4px;")
+        layout.addWidget(header)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet("background-color: #ccc; max-height: 1px;")
+        layout.addWidget(separator)
+
+        if not items:
+            empty = QLabel("No compounds detected.")
+            empty.setStyleSheet("font-size: 12px; color: #888; margin: 8px 0;")
+            layout.addWidget(empty)
+            return
+
+        max_val = max(v for _, v, _ in items)
+        for name, val, compound_type in items:
+            is_total = name.lower().startswith("total ")
+            color = _COLORS.get(compound_type, "#888")
+            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total)
+            layout.addWidget(bar)
+
+
+_CANNABIS_COLORS = [
+    "#4CAF50", "#66BB6A", "#81C784", "#A5D6A7",
+    "#2196F3", "#42A5F5", "#64B5F6",
+    "#FF9800", "#FFA726", "#FFB74D",
+    "#AB47BC", "#CE93D8",
+    "#78909C", "#90A4AE",
+]
+
+_TERPENE_COLORS = [
+    "#8D6E63", "#A1887F", "#BCAAA4",
+    "#26A69A", "#4DB6AC", "#80CBC4",
+    "#EC407A", "#F06292", "#F48FB1",
+    "#7E57C2", "#9575CD", "#B39DDB",
+    "#5C6BC0", "#7986CB", "#9FA8DA",
+]
+
+_CANNABINOID_KEYWORDS = {
+    "thc": "#2E7D32",
+    "thca": "#388E3C",
+    "thcv": "#43A047",
+    "delta-9-thc": "#1B5E20",
+    "delta-8-thc": "#4CAF50",
+    "cbd": "#1565C0",
+    "cbda": "#1976D2",
+    "cbdv": "#1E88E5",
+    "cbn": "#E65100",
+    "cbg": "#F57C00",
+    "cbga": "#FB8C00",
+    "cbc": "#7B1FA2",
+    "cbl": "#8E24AA",
+    "total": "#37474F",
+}
+
+_TERPENE_KEYWORDS: dict[str, str] = {}
+
+
+def _get_color(name: str, is_terpene: bool) -> str:
+    key = name.lower().replace(" ", "-").replace("_", "-")
+    if is_terpene:
+        idx = hash(key) % len(_TERPENE_COLORS)
+        return _TERPENE_COLORS[idx]
+    for kw, color in _CANNABINOID_KEYWORDS.items():
+        if kw in key:
+            return color
+    idx = hash(key) % len(_CANNABIS_COLORS)
+    return _CANNABIS_COLORS[idx]
+
+
+def _parse_items(text: str) -> list[tuple[str, float, str]]:
+    result = []
+    for line in text.split("\n"):
+        line = line.strip()
+        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*$", line)
+        if m:
+            name = m.group(1).strip()
+            val = float(m.group(2))
+            is_terp = name.lower() in {
+                "myrcene", "limonene", "pinene", "linalool", "caryophyllene",
+                "humulene", "terpinolene", "ocimene", "bisabolol", "nerolidol",
+                "guaiol", "valencene", "geraniol", "camphene", "borneol",
+                "eucalyptol", "terpineol", "fenchol", "sabinene", "phellandrene",
+                "3-carene", "pulegone", "geranyl acetate", "citronellol", "nerol",
+                "isopulegol", "beta-myrcene", "alpha-pinene", "beta-pinene",
+                "beta-caryophyllene", "alpha-humulene", "trans-nerolidol",
+                "alpha-bisabolol", "beta-ocimene", "d-limonene", "caryophyllene oxide",
+                "alpha-terpinene", "gamma-terpinene", "p-cymene", "alpha-terpineol",
+                "cis-ocimene", "trans-ocimene", "total terpenes",
+            }
+            compound_type = "terpene" if is_terp else "cannabinoid"
+            result.append((name, val, compound_type))
+    return result
+
+
+_COLORS = {}
+
+
+class VisualOutputWidget(QScrollArea):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWidgetResizable(True)
+        self._content = QWidget()
+        self._layout = QVBoxLayout(self._content)
+        self._layout.setContentsMargins(16, 12, 16, 12)
+        self._layout.setSpacing(2)
+        self.setWidget(self._content)
+
+        self._info_grid: QWidget | None = None
+        self._cannabinoid_section: _Section | None = None
+        self._terpene_section: _Section | None = None
+
+    def display(self, result: ParsedResult, raw_text: str) -> None:
+        for i in reversed(range(self._layout.count())):
+            item = self._layout.itemAt(i)
+            if item and item.widget():
+                item.widget().deleteLater()
+
+        meta = result.metadata
+
+        info_widget = QWidget()
+        info_layout = QVBoxLayout(info_widget)
+        info_layout.setContentsMargins(0, 0, 0, 8)
+        info_layout.setSpacing(2)
+
+        fields = [
+            ("Product", meta.get("product_name") or "-"),
+            ("Company", meta.get("company_name") or "-"),
+            ("Lab", result.format_name or "-"),
+            ("Date", meta.get("report_date") or "-"),
+            ("Category", meta.get("metrc_category") or "-"),
+        ]
+        for label_text, value in fields:
+            row = QHBoxLayout()
+            row.setSpacing(8)
+            lbl = QLabel(f"{label_text}:")
+            lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #555;")
+            lbl.setFixedWidth(70)
+            val = QLabel(value)
+            val.setStyleSheet("font-size: 12px;")
+            row.addWidget(lbl)
+            row.addWidget(val)
+            row.addStretch()
+            info_layout.addLayout(row)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet("background-color: #ccc; max-height: 1px;")
+        info_layout.addWidget(separator)
+
+        self._layout.addWidget(info_widget)
+
+        parsed = _parse_items(raw_text)
+        canna = [(n, v, _get_color(n, False)) for n, v, t in parsed if t != "terpene"]
+        terps = [(n, v, _get_color(n, True)) for n, v, t in parsed if t == "terpene"]
+
+        def sort_key(item: tuple[str, float, str]) -> tuple:
+            n, v, _ = item
+            is_total = n.lower().startswith("total ")
+            return (0 if is_total else 1, -v)
+
+        canna.sort(key=sort_key)
+        terps.sort(key=sort_key)
+
+        canna_widget = _Section("CANNABINOIDS", canna)
+        self._layout.addWidget(canna_widget)
+
+        terp_widget = _Section("TERPENES", terps)
+        self._layout.addWidget(terp_widget)
+
+        self._layout.addStretch()
