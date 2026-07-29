@@ -1,0 +1,983 @@
+  0: BDE, LLC
+  1: 417 North Virginia Avenue
+  2: Oklahoma City, Oklahoma 73106
+  3: Mcnelson@bdeok.com
+  4: 2145583235
+  5: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+  6: Certificate of Analysis
+  7: Final
+  8: Date Released: 8/29/2025   4:12:58PM
+  9: Best Day Ever Pain Cream
+ 10: Sample #: 68444, Weight: 50.00g, Unit Count: 1 1 unit =
+ 11: one 50ml bottle
+ 12: Order #: X250819-0001
+ 13: Category/Type: Infused Non-Edible, Lotion
+ 14: Date Collected: 8/19/2025   2:35:10PM
+ 15: Date Received: 8/19/2025   5:23:37PM
+ 16: Date Analyzed: 8/25/2025  12:54:44PM
+ 17: RTE ... wait not allowed during call-back Sample ID:
+ 18: 1A40E0100004988000002089
+ 19: RTE ... wait not allowed during call-back Source
+ 20: Package ID: 1A40E0100004988000002087
+ 21: RTE ... wait not allowed during call-back Batch ID:
+ 22: CR-081325
+ 23: Report #: 193623
+ 24: 1510 mg/unit
+ 25: 350 mg/unit
+ 26: 654 mg/unit
+ 27: 0.152 %
+ 28: PASS
+ 29: PASS
+ 30: PASS
+ 31: PASS
+ 32: PASS
+ 33: PASS
+ 34: Date Completed: 08/25/2025  12:54PM
+ 35: Cannabinoids by LC-DAD
+ 36: mg/g
+ 37: mg/unit
+ 38: LOQ
+ 39: (mg/unit
+ 40: )
+ 41: LOD
+ 42: (mg/unit
+ 43: )
+ 44: CAS#
+ 45: Compound
+ 46: Relative Concentration
+ 47: 1 CBD
+ 48: 13956-29-1
+ 49: 654
+ 50: 13.1
+ 51: 2 CBG
+ 52: 25654-31-3
+ 53: 503
+ 54: 10.1
+ 55: 3 d9-THC
+ 56: 1972-08-3
+ 57: 350
+ 58: 7.01
+ 59: 4 CBDVa
+ 60: 31932-13-5
+ 61: 0.000
+ 62: ND
+ 63: Total Cannabinoids: 1510 mg/unit
+ 64: Total THC: 350 mg/unit
+ 65: Total CBD: 654 mg/unit
+ 66: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+ 67: Measurement
+ 68: uncertainty
+ 69: is
+ 70: a
+ 71: fundamental
+ 72: aspect
+ 73: of
+ 74: these
+ 75: results.
+ 76: For
+ 77: detailed
+ 78: information
+ 79: regarding
+ 80: the
+ 81: measurement
+ 82: uncertainty
+ 83: associated
+ 84: with
+ 85: each
+ 86: parameter,
+ 87: please
+ 88: refer
+ 89: to
+ 90: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+ 91: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+ 92: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+ 93: without accounting for measurement uncertainty.
+ 94: Gateway Labs
+ 95: 120 W Grand Ave
+ 96: Tonkawa, OK
+ 97: 580-771-3306
+ 98: www.gatewaylabs.us
+ 99: RTE ... wait not allowed during call-back:
+100: LAAA-OHI0-1NC8
+101: 8/29/2025   5:15:22PM
+102: Michelle Speer, Laboratory Director
+103: Page 1 of 6
+104: Report Generated On: 08/29/2025 5:15:39PM
+105: BDE, LLC
+106: 417 North Virginia Avenue
+107: Oklahoma City, Oklahoma 73106
+108: Mcnelson@bdeok.com
+109: 2145583235
+110: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+111: Certificate of Analysis
+112: Final
+113: Best Day Ever Pain Cream
+114: Sample #: 68444
+115: mg/g
+116: mg/unit
+117: LOQ
+118: (mg/unit
+119: )
+120: LOD
+121: (mg/unit
+122: )
+123: CAS#
+124: Compound
+125: Relative Concentration
+126: 5 CBDV
+127: 24274-48-4
+128: 0.000
+129: ND
+130: 6 CBDa
+131: 1244-58-2
+132: 0.000
+133: ND
+134: 7 CBGa
+135: 25555-57-1
+136: 0.000
+137: ND
+138: 8 THCV
+139: 31262-37-0
+140: 0.000
+141: ND
+142: 9 THCVa
+143: 39986-26-0
+144: 0.000
+145: ND
+146: 0 CBN
+147: 521-35-7
+148: 0.000
+149: ND
+150: 1 CBL
+151: 21366-63-2
+152: 0.000
+153: ND
+154: 2 CBNa
+155: 2808-39-1
+156: 0.000
+157: ND
+158: 3 d8-THC
+159: 5957-75-5
+160: 0.000
+161: ND
+162: 4 CBC
+163: 20675-51-8
+164: 0.000
+165: ND
+166: 5 THCa
+167: 23978-85-0
+168: 0.000
+169: ND
+170: 6 CBCa
+171: 185505-15-1
+172: 0.000
+173: ND
+174: Test Comment: Cannabinoid results are reported on a dry weight basis when moisture is also included in this report.
+175: Date Completed: 08/22/2025   9:39AM i
+176: Terpenes by HS-GC-FID
+177: Total Terpenes: 0.152 %
+178: mg/g
+179: %
+180: LOQ
+181: (%)
+182: LOD
+183: (%)
+184: CAS#
+185: Compound
+186: Relative Concentration
+187: Other Terpenes
+188: 0.0557
+189: 0.557
+190: 1
+191: beta-Caryophyllene
+192: 0.0196
+193: 0.196
+194: 87-44-5
+195: 0.00075
+196: 0.00150
+197: 2
+198: Myrcene
+199: 0.0193
+200: 0.193
+201: 123-35-3
+202: 0.00150
+203: 0.00300
+204: 3
+205: alpha-Bisabolol
+206: 0.0193
+207: 0.193
+208: 515-69-5
+209: 0.00150
+210: 0.00300
+211: 4
+212: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+213: Measurement
+214: uncertainty
+215: is
+216: a
+217: fundamental
+218: aspect
+219: of
+220: these
+221: results.
+222: For
+223: detailed
+224: information
+225: regarding
+226: the
+227: measurement
+228: uncertainty
+229: associated
+230: with
+231: each
+232: parameter,
+233: please
+234: refer
+235: to
+236: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+237: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+238: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+239: without accounting for measurement uncertainty.
+240: Gateway Labs
+241: 120 W Grand Ave
+242: Tonkawa, OK
+243: 580-771-3306
+244: www.gatewaylabs.us
+245: RTE ... wait not allowed during call-back:
+246: LAAA-OHI0-1NC8
+247: 8/29/2025   5:15:22PM
+248: Michelle Speer, Laboratory Director
+249: Page 2 of 6
+250: Report Generated On: 08/29/2025 5:15:39PM
+251: BDE, LLC
+252: 417 North Virginia Avenue
+253: Oklahoma City, Oklahoma 73106
+254: Mcnelson@bdeok.com
+255: 2145583235
+256: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+257: Certificate of Analysis
+258: Final
+259: Best Day Ever Pain Cream
+260: Sample #: 68444
+261: mg/g
+262: %
+263: LOQ
+264: (%)
+265: LOD
+266: (%)
+267: CAS#
+268: Compound
+269: Relative Concentration
+270: Humulene
+271: 0.0192
+272: 0.192
+273: 6753-98-6
+274: 0.00150
+275: 0.00300
+276: 5
+277: Guaiol
+278: 0.0192
+279: 0.192
+280: 489-86-1
+281: 0.00075
+282: 0.00150
+283: 6
+284: Limonene
+285: 0.0186
+286: 0.186
+287: 138-86-3
+288: 0.00075
+289: 0.00150
+290: 7
+291: Geraniol
+292: 0.0185
+293: 0.185
+294: 106-24-1
+295: 0.00075
+296: 0.00150
+297: 8
+298: Isopulegol
+299: 0.0180
+300: 0.180
+301: 89-79-2
+302: 0.00150
+303: 0.00300
+304: 9
+305: alpha-Pinene
+306: ND
+307: ND
+308: 80-56-8
+309: 0.00150
+310: 0.00300
+311: 0
+312: Camphene
+313: ND
+314: ND
+315: 79-92-5
+316: 0.00150
+317: 0.00300
+318: 1
+319: beta-Pinene
+320: ND
+321: ND
+322: 127-91-3
+323: 0.00075
+324: 0.00150
+325: 2
+326: 3-Carene
+327: ND
+328: ND
+329: 13466-78-9
+330: 0.00150
+331: 0.00300
+332: 3
+333: alpha-Terpinene
+334: ND
+335: ND
+336: 99-86-5
+337: 0.00150
+338: 0.00300
+339: 4
+340: Eucalyptol
+341: ND
+342: ND
+343: 470-82-6
+344: 0.00150
+345: 0.00300
+346: 5
+347: Ocimene
+348: ND
+349: ND
+350: 13877-91-3
+351: 0.00150
+352: 0.00300
+353: 6
+354: gamma-Terpinene
+355: ND
+356: ND
+357: 99-85-4
+358: 0.00150
+359: 0.00300
+360: 7
+361: p-Cymene
+362: ND
+363: ND
+364: 99-87-6
+365: 0.00150
+366: 0.00300
+367: 8
+368: Terpinolene
+369: ND
+370: ND
+371: 586-62-9
+372: 0.00075
+373: 0.00150
+374: 9
+375: Linalool
+376: ND
+377: ND
+378: 78-70-6
+379: 0.00075
+380: 0.00150
+381: 20
+382: Nerolidol
+383: ND
+384: ND
+385: 142-50-7
+386: 0.00300
+387: 0.00750
+388: 21
+389: Caryophyllene Oxide
+390: ND
+391: ND
+392: 1139-30-6
+393: 0.00150
+394: 0.00300
+395: 22
+396: Test Comment: Results are reported on a dry weight basis when moisture is also included in this report.
+397: Other Terpenes is a sum of individual terepenes: camphene, carene, ocimene, terpinene, p-cymene, terpinolene, isopulegol, geraniol and guaiol.
+398: Foreign Matter by Microscope
+399: Status
+400: Result (%)
+401: Limits (%)
+402: LOD
+403: (%)
+404: Compound
+405: Date Completed: 08/21/2025   1:06PM
+406: Pass
+407: LOQ
+408: (%)
+409: Pass
+410: 1
+411: ND
+412: 2
+413: 1
+414: 0.5
+415: Filth
+416: Foreign Matter by Microscope Visual Inspection
+417: Comment:
+418: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+419: Measurement
+420: uncertainty
+421: is
+422: a
+423: fundamental
+424: aspect
+425: of
+426: these
+427: results.
+428: For
+429: detailed
+430: information
+431: regarding
+432: the
+433: measurement
+434: uncertainty
+435: associated
+436: with
+437: each
+438: parameter,
+439: please
+440: refer
+441: to
+442: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+443: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+444: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+445: without accounting for measurement uncertainty.
+446: Gateway Labs
+447: 120 W Grand Ave
+448: Tonkawa, OK
+449: 580-771-3306
+450: www.gatewaylabs.us
+451: RTE ... wait not allowed during call-back:
+452: LAAA-OHI0-1NC8
+453: 8/29/2025   5:15:22PM
+454: Michelle Speer, Laboratory Director
+455: Page 3 of 6
+456: Report Generated On: 08/29/2025 5:15:39PM
+457: BDE, LLC
+458: 417 North Virginia Avenue
+459: Oklahoma City, Oklahoma 73106
+460: Mcnelson@bdeok.com
+461: 2145583235
+462: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+463: Certificate of Analysis
+464: Final
+465: Best Day Ever Pain Cream
+466: Sample #: 68444
+467: Pesticides by LC-MS/MS
+468: Status
+469: Result (ppm)
+470: Limits (ppm)
+471: LOD
+472: (ppm)
+473: Compound
+474: Date Completed: 08/21/2025  12:49PM
+475: Pass
+476: LOQ
+477: (ppm)
+478: Pass
+479: 0.020
+480: ND
+481: <0.5
+482: 1
+483: 0.008
+484: Abamectins
+485: Pass
+486: 0.051
+487: ND
+488: <0.2
+489: 2
+490: 0.020
+491: Azoxystrobin
+492: Pass
+493: 0.049
+494: ND
+495: <0.2
+496: 3
+497: 0.020
+498: Bifenazate
+499: Pass
+500: 0.050
+501: ND
+502: <0.2
+503: 4
+504: 0.020
+505: Etoxazole
+506: Pass
+507: 0.100
+508: ND
+509: <0.2
+510: 5
+511: 0.020
+512: Imazalil
+513: Pass
+514: 0.100
+515: ND
+516: <0.4
+517: 6
+518: 0.020
+519: Imidacloprid
+520: Pass
+521: 0.100
+522: ND
+523: <0.2
+524: 7
+525: 0.020
+526: Malathion
+527: Pass
+528: 0.100
+529: ND
+530: <0.2
+531: 8
+532: 0.020
+533: Myclobutanil
+534: Pass
+535: 0.021
+536: ND
+537: <0.2
+538: 9
+539: 0.008
+540: Permethrins
+541: Pass
+542: 0.007
+543: ND
+544: <0.2
+545: 10
+546: 0.003
+547: Spinosad
+548: Pass
+549: 0.050
+550: ND
+551: <0.2
+552: 11
+553: 0.020
+554: Spiromesifen
+555: Pass
+556: 0.049
+557: ND
+558: <0.2
+559: 12
+560: 0.020
+561: Spirotetramat
+562: Pass
+563: 0.050
+564: ND
+565: <0.4
+566: 13
+567: 0.020
+568: Tebuconazole
+569: Pesticide results are reported on a dry weight basis when moisture is also included in this report.
+570: Comment:
+571: Residual Solvents by HS-GC-FID
+572: Status
+573: Result (ppm)
+574: Limits (ppm)
+575: LOD
+576: (ppm)
+577: Compound
+578: Date Completed: 08/21/2025   4:23PM
+579: Pass
+580: LOQ
+581: (ppm)
+582: Pass
+583: 10
+584: ND
+585: <1000
+586: 1
+587: 5
+588: Acetone
+589: Pass
+590: 1
+591: ND
+592: <2
+593: 2
+594: 0.5
+595: Benzene
+596: Pass
+597: 10
+598: ND
+599: <1000
+600: 3
+601: 5
+602: Butane
+603: Pass
+604: 250
+605: ND
+606: 4
+607: 100
+608: Ethanol
+609: Pass
+610: 10
+611: ND
+612: <1000
+613: 5
+614: 5
+615: Ethyl acetate
+616: Pass
+617: 10
+618: ND
+619: <1000
+620: 6
+621: 5
+622: Heptane
+623: Pass
+624: 10
+625: ND
+626: <60
+627: 7
+628: 5
+629: Hexane
+630: Pass
+631: 250
+632: ND
+633: <1000
+634: 8
+635: 100
+636: Isopropyl Alcohol
+637: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+638: Measurement
+639: uncertainty
+640: is
+641: a
+642: fundamental
+643: aspect
+644: of
+645: these
+646: results.
+647: For
+648: detailed
+649: information
+650: regarding
+651: the
+652: measurement
+653: uncertainty
+654: associated
+655: with
+656: each
+657: parameter,
+658: please
+659: refer
+660: to
+661: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+662: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+663: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+664: without accounting for measurement uncertainty.
+665: Gateway Labs
+666: 120 W Grand Ave
+667: Tonkawa, OK
+668: 580-771-3306
+669: www.gatewaylabs.us
+670: RTE ... wait not allowed during call-back:
+671: LAAA-OHI0-1NC8
+672: 8/29/2025   5:15:22PM
+673: Michelle Speer, Laboratory Director
+674: Page 4 of 6
+675: Report Generated On: 08/29/2025 5:15:39PM
+676: BDE, LLC
+677: 417 North Virginia Avenue
+678: Oklahoma City, Oklahoma 73106
+679: Mcnelson@bdeok.com
+680: 2145583235
+681: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+682: Certificate of Analysis
+683: Final
+684: Best Day Ever Pain Cream
+685: Sample #: 68444
+686: Residual Solvents by HS-GC-FID
+687: Status
+688: Result (ppm)
+689: Limits (ppm)
+690: LOD
+691: (ppm)
+692: Compound
+693: Date Completed: 08/21/2025   4:23PM
+694: Pass
+695: LOQ
+696: (ppm)
+697: Pass
+698: 250
+699: ND
+700: <600
+701: 9
+702: 100
+703: Methanol
+704: Pass
+705: 10
+706: <LOQ
+707: <1000
+708: 10
+709: 5
+710: Pentane
+711: Pass
+712: 10
+713: ND
+714: <1000
+715: 11
+716: 5
+717: Propane
+718: Pass
+719: 10
+720: ND
+721: <180
+722: 12
+723: 5
+724: Toluene
+725: Pass
+726: 10
+727: ND
+728: <430
+729: 13
+730: 5
+731: Total xylenes
+732: Residual Solvents by HS-GC-FID
+733: Comment:
+734: Mycotoxins by LC-MS/MS
+735: Status
+736: Result (ppb)
+737: Limits (ppb)
+738: LOD
+739: (ppb)
+740: Compound
+741: Date Completed: 08/21/2025  12:49PM
+742: Pass
+743: LOQ
+744: (ppb)
+745: Pass
+746: 5
+747: ND
+748: 1
+749: 2
+750: Aflatoxin B1
+751: Pass
+752: 10
+753: ND
+754: 2
+755: 5
+756: Aflatoxin B2
+757: Pass
+758: 10
+759: ND
+760: 3
+761: 5
+762: Aflatoxin G1
+763: Pass
+764: 10
+765: ND
+766: 4
+767: 5
+768: Aflatoxin G2
+769: Pass
+770: 10
+771: ND
+772: <20
+773: 5
+774: 5
+775: Ochratoxin A
+776: Pass
+777: 5
+778: ND
+779: <20
+780: 6
+781: 2
+782: Total Aflatoxin
+783: Mycotoxins by LC-MS/MS
+784: Comment:
+785: Metals by ICP-MS
+786: Status
+787: Result (ppm)
+788: Limits (ppm)
+789: LOD
+790: (ppm)
+791: Compound
+792: Date Completed: 08/22/2025   9:19AM
+793: Pass
+794: LOQ
+795: (ppm)
+796: Pass
+797: 0.03
+798: ND
+799: <3
+800: 1
+801: 0.009
+802: Arsenic
+803: Pass
+804: 0.02
+805: ND
+806: <3
+807: 2
+808: 0.006
+809: Cadmium
+810: Pass
+811: 0.04
+812: ND
+813: <10
+814: 3
+815: 0.012
+816: Lead
+817: Pass
+818: 0.05
+819: ND
+820: <1
+821: 4
+822: 0.015
+823: Mercury
+824: Metals results are reported on a dry weight basis when moisture is also included in this report.
+825: Comment:
+826: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+827: Measurement
+828: uncertainty
+829: is
+830: a
+831: fundamental
+832: aspect
+833: of
+834: these
+835: results.
+836: For
+837: detailed
+838: information
+839: regarding
+840: the
+841: measurement
+842: uncertainty
+843: associated
+844: with
+845: each
+846: parameter,
+847: please
+848: refer
+849: to
+850: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+851: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+852: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+853: without accounting for measurement uncertainty.
+854: Gateway Labs
+855: 120 W Grand Ave
+856: Tonkawa, OK
+857: 580-771-3306
+858: www.gatewaylabs.us
+859: RTE ... wait not allowed during call-back:
+860: LAAA-OHI0-1NC8
+861: 8/29/2025   5:15:22PM
+862: Michelle Speer, Laboratory Director
+863: Page 5 of 6
+864: Report Generated On: 08/29/2025 5:15:39PM
+865: BDE, LLC
+866: 417 North Virginia Avenue
+867: Oklahoma City, Oklahoma 73106
+868: Mcnelson@bdeok.com
+869: 2145583235
+870: RTE ... wait not allowed during call-back: PAAA-VKUK-N5UE
+871: Certificate of Analysis
+872: Final
+873: Best Day Ever Pain Cream
+874: Sample #: 68444
+875: Microbials by qPCR
+876: Status
+877: Result (CFU/g)
+878: Limits (CFU/g)
+879: LOD
+880: (CFU/g)
+881: Compound
+882: Date Completed: 08/22/2025   3:55PM
+883: Pass
+884: LOQ
+885: (CFU/g)
+886: Pass
+887: Not Detected
+888: <1
+889: 1
+890: 1
+891: Aspergillus Flavus
+892: Pass
+893: Not Detected
+894: <1
+895: 2
+896: 1
+897: Aspergillus fumigatus
+898: Pass
+899: Not Detected
+900: <1
+901: 3
+902: 1
+903: Aspergillus niger
+904: Pass
+905: Not Detected
+906: <1
+907: 4
+908: 1
+909: Aspergillus terreus
+910: Pass
+911: Not Detected
+912: <1
+913: 5
+914: 1
+915: Samlonella
+916: Pass
+917: Not Detected
+918: <1
+919: 6
+920: 1
+921: STEC
+922: Aspergillus, Salmonella & STEC analysis by qPCR
+923: Comment:
+924: Total Yeast and Mold
+925: Status
+926: Result (CFU/g)
+927: Limits (CFU/g)
+928: LOD
+929: (CFU/g)
+930: Compound
+931: Date Completed: 08/24/2025   9:56PM
+932: Pass
+933: LOQ
+934: (CFU/g)
+935: Pass
+936: 1000
+937: ND
+938: <10000
+939: 1
+940: 1000
+941: Total Yeast and Mold
+942: Total Yeast and Mold by 3M Petrifilm
+943: Comment:
+944: Results relate only to the items tested as received. Customer must follow sampling methods as outlined in SOP-A112 Sampling Requirements and Submission Procedures.
+945: Measurement
+946: uncertainty
+947: is
+948: a
+949: fundamental
+950: aspect
+951: of
+952: these
+953: results.
+954: For
+955: detailed
+956: information
+957: regarding
+958: the
+959: measurement
+960: uncertainty
+961: associated
+962: with
+963: each
+964: parameter,
+965: please
+966: refer
+967: to
+968: https://www.gatewaylabs.us/measurementuncertainty. For a precise estimation of measurement uncertainty at the time of analysis, contact the laboratory.
+969: Gateway Labs adheres to OMMA specifications, applying a 'simple decision rule' for PASS/FAIL determinations. Each individual test result is assessed against its specified limit; any test result that exceeds the threshold will be
+970: marked as FAIL for that parameter. A FAIL result for any parameter in an analysis will result in an overall FAIL status for that analysis. PASS/FAIL determinations are based solely on measured values relative to specification limits,
+971: without accounting for measurement uncertainty.
+972: Gateway Labs
+973: 120 W Grand Ave
+974: Tonkawa, OK
+975: 580-771-3306
+976: www.gatewaylabs.us
+977: RTE ... wait not allowed during call-back:
+978: LAAA-OHI0-1NC8
+979: 8/29/2025   5:15:22PM
+980: Michelle Speer, Laboratory Director
+981: Page 6 of 6
+982: Report Generated On: 08/29/2025 5:15:39PM

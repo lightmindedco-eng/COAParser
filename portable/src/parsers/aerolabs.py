@@ -347,7 +347,7 @@ class AerolabsParser(BaseParser):
                     continue
             filtered.append(item)
 
-        # If mg/unit mode, compute percentages from collected mg/unit values
+        # If mg/unit mode, compute percentages from collected mg/unit values (preserve mg for display)
         if mg_unit_items:
             total_mg = sum(v for _, v in mg_unit_items)
             if total_mg > 0:
@@ -355,7 +355,7 @@ class AerolabsParser(BaseParser):
                 for name, mg_val in mg_unit_items:
                     pct = (mg_val / total_mg) * 100
                     if pct >= 0.01:
-                        computed_map[name.lower()] = f"{name}: {pct:.2f}%"
+                        computed_map[name.lower()] = f"{name}: {pct:.2f}% ({mg_val:.4g} mg/unit)"
                 # Merge: computed cannabinoids + existing items (terpenes, totals)
                 new_filtered: list[str] = []
                 seen_names: set[str] = set()

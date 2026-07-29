@@ -1,1 +1,1 @@
-"""Parsers package."""
+"""Parsing modules."""

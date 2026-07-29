@@ -17,17 +17,31 @@ from PySide6.QtWidgets import (
 from src.models.result import ParsedResult
 
 
+def _strip_name(name: str) -> str:
+    idx = name.find(" - ")
+    if idx > 0:
+        return name[idx + 3:]
+    return name
+
+
 class _BarRow(QWidget):
-    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False) -> None:
+    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False, mg: float | None = None) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 1, 0, 1)
         layout.setSpacing(6)
 
         name_label = QLabel(name)
-        name_label.setFixedWidth(180)
+        name_label.setMinimumWidth(100)
         name_label.setStyleSheet(f"font-size: 12px; font-weight: {'600' if bold else '400'};")
         layout.addWidget(name_label)
+
+        track = QFrame()
+        track.setFixedHeight(22)
+        track.setStyleSheet("background-color: transparent;")
+        track_layout = QHBoxLayout(track)
+        track_layout.setContentsMargins(0, 0, 0, 0)
+        track_layout.setSpacing(0)
 
         bar = QFrame()
         bar.setFixedHeight(22)
@@ -36,19 +50,31 @@ class _BarRow(QWidget):
                 stop:0 {color}, stop:1 {color});
             border-radius: 3px;
         """)
-        bar.setFixedWidth(max(1, int(pct_of_max * 280)))
-        layout.addWidget(bar, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        track_layout.addWidget(bar)
 
-        val_label = QLabel(f"{value:.3f}%")
+        if pct_of_max < 1.0:
+            filler = QWidget()
+            filler.setStyleSheet("background-color: transparent;")
+            track_layout.addWidget(filler)
+            bar_stretch = max(1, int(pct_of_max * 1000))
+            filler_stretch = max(0, 1000 - bar_stretch)
+            track_layout.setStretchFactor(bar, bar_stretch)
+            track_layout.setStretchFactor(filler, filler_stretch)
+
+        layout.addWidget(track, stretch=1)
+
+        if mg is not None:
+            val_label = QLabel(f"{value:.3f}%  ({mg:.3f} mg/unit)")
+        else:
+            val_label = QLabel(f"{value:.3f}%")
         val_label.setStyleSheet("font-size: 12px;")
-        val_label.setFixedWidth(80)
+        val_label.setMinimumWidth(80)
+        val_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(val_label)
-
-        layout.addStretch()
 
 
 class _Section(QWidget):
-    def __init__(self, title: str, items: list[tuple[str, float, str]], total_name: str | None = None) -> None:
+    def __init__(self, title: str, items: list[tuple[str, float, str, float | None]], total_name: str | None = None) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -69,11 +95,12 @@ class _Section(QWidget):
             layout.addWidget(empty)
             return
 
-        max_val = max(v for _, v, _ in items)
-        for name, val, compound_type in items:
+        max_val = max(v for _, v, _, _ in items)
+        for name, val, compound_type, mg in items:
             is_total = name.lower().startswith("total ")
-            color = _COLORS.get(compound_type, "#888")
-            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total)
+            is_terp = compound_type == "terpene"
+            color = _get_color(name, is_terp)
+            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total, mg=mg)
             layout.addWidget(bar)
 
 
@@ -125,15 +152,17 @@ def _get_color(name: str, is_terpene: bool) -> str:
     return _CANNABIS_COLORS[idx]
 
 
-def _parse_items(text: str) -> list[tuple[str, float, str]]:
+def _parse_items(text: str) -> list[tuple[str, float, str, float | None]]:
     result = []
     for line in text.split("\n"):
         line = line.strip()
-        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*$", line)
+        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*(?:\(([\d.]+)\s*mg/unit\))?\s*$", line)
         if m:
             name = m.group(1).strip()
             val = float(m.group(2))
-            is_terp = name.lower() in {
+            mg = float(m.group(3)) if m.group(3) else None
+            stripped = _strip_name(name).lower()
+            is_terp = stripped in {
                 "myrcene", "limonene", "pinene", "linalool", "caryophyllene",
                 "humulene", "terpinolene", "ocimene", "bisabolol", "nerolidol",
                 "guaiol", "valencene", "geraniol", "camphene", "borneol",
@@ -146,11 +175,8 @@ def _parse_items(text: str) -> list[tuple[str, float, str]]:
                 "cis-ocimene", "trans-ocimene", "total terpenes",
             }
             compound_type = "terpene" if is_terp else "cannabinoid"
-            result.append((name, val, compound_type))
+            result.append((name, val, compound_type, mg))
     return result
-
-
-_COLORS = {}
 
 
 class VisualOutputWidget(QScrollArea):
@@ -208,21 +234,37 @@ class VisualOutputWidget(QScrollArea):
         self._layout.addWidget(info_widget)
 
         parsed = _parse_items(raw_text)
-        canna = [(n, v, _get_color(n, False)) for n, v, t in parsed if t != "terpene"]
-        terps = [(n, v, _get_color(n, True)) for n, v, t in parsed if t == "terpene"]
+        canna = [(n, v, t, mg) for n, v, t, mg in parsed if t != "terpene"]
+        terps = [(n, v, t, mg) for n, v, t, mg in parsed if t == "terpene"]
 
-        def sort_key(item: tuple[str, float, str]) -> tuple:
-            n, v, _ = item
+        def sort_key(item: tuple) -> tuple:
+            n, v, _, _ = item
             is_total = n.lower().startswith("total ")
             return (0 if is_total else 1, -v)
 
         canna.sort(key=sort_key)
         terps.sort(key=sort_key)
 
-        canna_widget = _Section("CANNABINOIDS", canna)
-        self._layout.addWidget(canna_widget)
+        self._layout.addWidget(_Section("CANNABINOIDS", canna))
+        self._layout.addWidget(_Section("TERPENES", terps))
 
-        terp_widget = _Section("TERPENES", terps)
-        self._layout.addWidget(terp_widget)
+        strain_groups = result.metadata.get("strain_groups", [])
+        for strain_name, strain_items in strain_groups:
+            sep = QFrame()
+            sep.setFrameShape(QFrame.HLine)
+            sep.setStyleSheet("background-color: #bbb; max-height: 2px; margin: 12px 0;")
+            self._layout.addWidget(sep)
+
+            strain_text = "\n".join(strain_items)
+            strain_parsed = _parse_items(strain_text)
+            s_canna = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t != "terpene"]
+            s_terps = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t == "terpene"]
+            s_canna.sort(key=sort_key)
+            s_terps.sort(key=sort_key)
+
+            if s_canna:
+                self._layout.addWidget(_Section(f"{strain_name} \u2014 Cannabinoids", s_canna))
+            if s_terps:
+                self._layout.addWidget(_Section(f"{strain_name} \u2014 Terpenes", s_terps))
 
         self._layout.addStretch()

@@ -8,6 +8,8 @@ import re
 def detect_format(content: str) -> str:
     """Return a simple format label based on content hints."""
     lowered = content.lower()
+    if "sunrise labs" in lowered and "mg/unit" in lowered:
+        return "sunrise"
     if "aerolabs" in lowered:
         return "aerolabs"
     if "gateway" in lowered or "gatewaylabs" in lowered:
@@ -336,6 +338,14 @@ def _detect_metrc_category_raw(lines: list[str]) -> str | None:
             if candidate and len(candidate) > 3:
                 return candidate
 
+    # Pass 2b: "Type of Sample:" label (Sunrise Labs)
+    for line in lines[:50]:
+        m = re.match(r"^type\s+of\s+sample\s*:\s*(.+)$", line.strip(), re.IGNORECASE)
+        if m:
+            candidate = m.group(1).strip()
+            if candidate and len(candidate) > 3:
+                return candidate
+
     # Pass 3: Match unlabeled lines against known METRC category vocabulary
     # (covers PDFs where category appears as a standalone line without "Type:" label)
     _METRC_CATEGORIES = {
@@ -390,6 +400,9 @@ def _detect_metrc_category_raw(lines: list[str]) -> str | None:
         "vape cart": "Concentrates & Extracts, Vape",
         "vape cartridges": "Concentrates & Extracts, Vape",
         "flower - cured": "Plant, Flower - Cured",
+        "candy bar": "Ingestible, Chocolate",
+        "topical oil/cream": "Topicals (Count-Weight)",
+        "capsules": "Tinctures (Count-Weight)",
     }
     _METRC_SHORT.update(
         {k.lower(): v for k, v in _METRC_ALIASES.items()}

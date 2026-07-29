@@ -1,1 +1,1 @@
-"""Portable COAParser package."""
+"""COAParser package."""
