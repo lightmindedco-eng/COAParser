@@ -25,6 +25,7 @@ class HighresParser(BaseParser):
         normalized = re.sub(r'\by-(?=[A-Za-z])', 'gamma-', normalized, flags=re.IGNORECASE)
         normalized = re.sub(r'\?(\d)', r'd\1', normalized)
         normalized = re.sub(r'\b[d](?=\d)', 'delta-', normalized, flags=re.IGNORECASE)
+        normalized = re.sub(r'-\s+', '-', normalized)
         return normalized
 
     def _match_compound(self, line_lower: str) -> str | None:

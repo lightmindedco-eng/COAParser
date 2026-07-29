@@ -90,21 +90,29 @@ class AerolabsParser(BaseParser):
         # Detect layout by checking the first "Total X" line found:
         #   - If the line BEFORE it is a percentage → Aerolabs (value-before-label)
         #   - If the line AFTER it is a percentage or ND → Confident (label-before-value)
+        # Scan past non-value lines (labels like "MU Range:") when checking.
         pct_re = re.compile(r"^(\d+\.?\d*)\s*%$")
+        skip_re = re.compile(r"^(pass|fail|mu range|not tested|nd|nr|<loq|safe|pesticide|microbial|mycotoxin|solvent|metal|foreign)", re.IGNORECASE)
         layout = None  # "value_before" or "value_after"
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             m_total = re.match(r"^Total\s+([\w\s-]+)$", line_stripped, re.IGNORECASE)
             if m_total:
-                prev_is_pct = i > 0 and pct_re.match(lines[i - 1].strip())
+                # Scan backwards for nearest percentage value
+                prev_is_pct = False
+                for back in range(1, min(i + 1, 6)):
+                    candidate = lines[i - back].strip()
+                    if pct_re.match(candidate):
+                        prev_is_pct = True
+                        break
+                    if not skip_re.match(candidate):
+                        break  # reached a content line that isn't a % — stop
                 next_is_pct = i + 1 < len(lines) and pct_re.match(lines[i + 1].strip())
                 if prev_is_pct and not next_is_pct:
                     layout = "value_before"
                 elif next_is_pct and not prev_is_pct:
                     layout = "value_after"
                 elif prev_is_pct and next_is_pct:
-                    # Both sides have percentages — check if prev is Total Cannabinoids-like
-                    # In Aerolabs, the value before "Total THC" is the actual Total THC value
                     layout = "value_before"
                 break
 
@@ -120,13 +128,16 @@ class AerolabsParser(BaseParser):
                 if key in seen:
                     continue
                 if layout == "value_before":
-                    # Aerolabs: value is on the line BEFORE the label
-                    if i > 0:
-                        prev_line = lines[i - 1].strip()
+                    # Aerolabs: scan backwards past non-value lines for nearest %
+                    for back in range(1, min(i + 1, 6)):
+                        prev_line = lines[i - back].strip()
                         m_val = pct_re.match(prev_line)
                         if m_val:
                             seen.add(key)
                             results.append(f"Total {label}: {m_val.group(1)}%")
+                            break
+                        if not skip_re.match(prev_line):
+                            break
                 else:
                     # Confident: value is on the line AFTER the label
                     next_line = lines[i + 1].strip()
@@ -180,8 +191,7 @@ class AerolabsParser(BaseParser):
                     # Stop searching once we hit compound data or another section
                     if (self._match_compound(ahead_lower) or re.search(r"^(cannabinoid|terpene)", ahead_lower)) and not re.search(r"^total", ahead_lower):
                         break
-                if found_ppm:
-                    result_index = 3
+                # PPM column replaces mg/g, same column position; result_index stays unchanged.
 
             # Skip headers, totals, formulas, and metadata lines
             if (

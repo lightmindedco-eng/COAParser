@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 
 def detect_format(content: str) -> str:
     """Return a simple format label based on content hints."""
-    lowered = content.lower()
+    # Normalize PDF ligature corruption:
+    #   - U+FB01 ﬁ → fi, U+FB02 ﬂ → fl (NFKC decomposition)
+    #   - U+00D7 × → fi (font maps fi ligature to multiplication sign)
+    norm = unicodedata.normalize("NFKC", content).replace("\u00d7", "fi")
+    lowered = norm.lower()
     if "sunrise labs" in lowered and "mg/unit" in lowered:
         return "sunrise"
     if "highres labs" in lowered:
@@ -97,26 +102,67 @@ def detect_product_name(lines: list[str]) -> str | None:
                 prev = lines[i - 1].strip()
                 if prev and ":" not in prev and len(prev) > len(strain_value or ""):
                     if not re.search(r"^(type|category|sample|matrix|license|metrc|strain|batch|date)", prev, re.IGNORECASE):
-                        if len(prev) > 3:
-                            candidate = _clean_product_name(prev)
-                            if len(candidate) > 3 and len(candidate) < 250:
-                                return candidate
+                        # Skip Sample ID patterns like "SAM-03/13/2025-17994" or "2604HTL0727.5047"
+                        if not re.match(r"^[A-Z0-9]{2,}[-/]\d{1,2}", prev) and not re.match(r"^[A-Z]+\d{2,}", prev):
+                            if len(prev) > 3:
+                                candidate = _clean_product_name(prev)
+                                if len(candidate) > 3 and len(candidate) < 250:
+                                    return candidate
 
-            # Look ahead for a fuller description line (no colon, longer, has " - " separator)
-            for j in range(i + 1, min(i + 15, len(lines))):
+            # Join truncated Strain: value with next line(s) for multi-line names (Highres etc.)
+            joined_strain = strain_value
+            for j in range(i + 1, min(i + 4, len(lines))):
+                nxt = lines[j].strip()
+                if not nxt or ":" in nxt:
+                    break
+                if re.match(r"^(metrc|harvest|batch|production|sampl|plant,|concentrate)", nxt, re.IGNORECASE):
+                    break
+                if len(joined_strain) < 15 or joined_strain.endswith("-"):
+                    joined_strain = joined_strain + " " + nxt
+                else:
+                    break
+            if joined_strain != strain_value:
+                strain_value = joined_strain
+
+            # Look ahead for a fuller description line (no colon, longer, has " - " separator
+            # or is simply more descriptive than the Strain: value)
+            shortest_acceptable = len(strain_value) + 3 if strain_value else 10
+            for j in range(i + 1, min(i + 20, len(lines))):
                 candidate = lines[j].strip()
                 if not candidate or ":" in candidate:
                     continue
-                # Check for a fuller product description first
-                if len(candidate) > 15 and " - " in candidate:
-                    if not re.search(r"(batch\s+#?|lot\s+#?|harvest|sampling|environment|primary\s+sample|metrc)", candidate, re.IGNORECASE):
-                        return _clean_product_name(candidate)
-                # Stop at category or METRC lines (checked after description match)
-                if re.search(r"\b(metrc|concentrate|edible|ingestible|plant,\s|^[A-Z][a-z]+,\s)", candidate, re.IGNORECASE):
+                # Try joining consecutive short lines that together form a product name
+                full_candidate = candidate
+                for k in range(j + 1, min(j + 4, len(lines))):
+                    next_line = lines[k].strip()
+                    if not next_line or ":" in next_line:
+                        break
+                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate)", next_line, re.IGNORECASE):
+                        break
+                    if len(next_line) < 30:
+                        full_candidate = full_candidate + " " + next_line
+                    else:
+                        break
+                # Skip candidates that look like METRC categories, sample IDs, or metadata
+                if re.search(r"(concentrate|metrc|sample\s+(matrix|collection|id|size|storage)|harvest|production\s+batch|primary\s+sample|lot\s+#|batch\s+#)", full_candidate, re.IGNORECASE):
+                    continue
+                # Skip if candidate is shorter than already-known strain value
+                if strain_value and len(full_candidate) <= len(strain_value) - 3:
+                    continue
+                # Check for a fuller product description (with dashes or longer/more specific)
+                if len(full_candidate) > 15 and " - " in full_candidate:
+                    return _clean_product_name(full_candidate)
+                # Accept names without dashes if they're significantly longer than Strain value
+                if len(full_candidate) > shortest_acceptable and len(full_candidate) > 10:
+                    # Must have more words than Strain value (e.g., "Citron Shake/Trim" > "Citron")
+                    strain_words = len(strain_value.split()) if strain_value else 0
+                    if len(full_candidate.split()) > strain_words:
+                        # Skip Sample ID patterns like "SAM-03/13/2025-17994"
+                        if not re.match(r"^[A-Z]{2,5}[-/]\d{1,2}", full_candidate):
+                            return _clean_product_name(full_candidate)
+                # Stop at METRC/sample collection lines that delineate sections
+                if re.search(r"\b(metrc|sample\s+collection|harvest|production\s+batch)", candidate, re.IGNORECASE):
                     break
-
-            # Fallback to the Strain: value
-            if strain_value:
                 strain_value = re.sub(
                     r"\s*-\s*batch\s*\d+.*$", "", strain_value, flags=re.IGNORECASE
                 ).strip()

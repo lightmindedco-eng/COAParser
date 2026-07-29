@@ -62,7 +62,10 @@ class BaselineParser(BaseParser):
         Strategy:
         1. Extract summary totals (Total THC, Total CBD, Total Cannabinoids, Total Terpenes)
         2. Detect section headers (Cannabinoid, Terpenes)
-        3. For each compound line, the next line is Result %
+        3. For each compound line, pick the correct numeric value based on format:
+           - Old format: "Compound / Result % / Result μg/g" → next line is Result %
+           - New format (Confident LIMS): "Compound / Reporting Limit / Mass % / Mass mg/g"
+             → skip Reporting Limit, take Mass % (2nd line after compound)
         4. ND on the value line = not detected, skip
         """
         nd_re = re.compile(r"^ND$", re.IGNORECASE)
@@ -99,6 +102,16 @@ class BaselineParser(BaseParser):
                         seen.add(key)
                         results.append(f"{label}: {m_val.group(1)}%")
 
+        # Detect if this document uses the new "Reporting Limit" column format
+        # New format has "Reporting" and "Limit" on consecutive lines as column headers
+        has_reporting_limit = False
+        for j in range(len(lines) - 1):
+            if re.search(r"reporting", lines[j], re.IGNORECASE) and re.search(r"^limit$", lines[j + 1].strip(), re.IGNORECASE):
+                has_reporting_limit = True
+                break
+        # Value offset: 1 for old format (Result %), 2 for new format (skip RL, take Mass %)
+        val_offset = 2 if has_reporting_limit else 1
+
         in_section = False
 
         i = 0
@@ -121,6 +134,8 @@ class BaselineParser(BaseParser):
                 or "method" in line_lower
                 or "total" in line_lower
                 or "reporting limit" in line_lower
+                or "reporting" in line_lower
+                or "limit" == line_lower
                 or "nd = not detected" in line_lower
                 or "analysis" in line_lower
                 or re.search(r"^\d+\s*$", line)  # standalone page numbers
@@ -135,6 +150,8 @@ class BaselineParser(BaseParser):
                 or "report" in line_lower
                 or "passed" in line_lower
                 or "not detected" in line_lower
+                or "analyte" in line_lower
+                or "mass" in line_lower
             ):
                 i += 1
                 continue
@@ -151,14 +168,15 @@ class BaselineParser(BaseParser):
                 i += 1
                 continue
 
-            # Look ahead for the value (next line should be Result %)
+            # Look ahead for the value (skip Reporting Limit in new format)
             value: str | None = None
-            if i + 1 < len(lines):
-                next_line = lines[i + 1].strip()
-                if nd_re.match(next_line):
+            val_idx = i + val_offset
+            if val_idx < len(lines):
+                val_line = lines[val_idx].strip()
+                if nd_re.match(val_line):
                     value = "ND"
-                elif number_re.match(next_line):
-                    value = f"{next_line}%"
+                elif number_re.match(val_line):
+                    value = f"{val_line}%"
 
             seen.add(matched.lower())
             if value == "ND":

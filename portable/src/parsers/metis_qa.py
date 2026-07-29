@@ -25,6 +25,8 @@ class MetisQAParser(BaseParser):
         normalized = re.sub(r'\by-(?=[A-Za-z])', 'gamma-', normalized, flags=re.IGNORECASE)
         normalized = re.sub(r'\?(\d)', r'd\1', normalized)
         normalized = re.sub(r'\b[d](?=\d)', 'delta-', normalized, flags=re.IGNORECASE)
+        # Remove spaces after trailing hyphens (e.g., "trans-beta- farnesene" -> "trans-beta-farnesene")
+        normalized = re.sub(r'-\s+', '-', normalized)
         return normalized
 
     def _match_compound(self, line_lower: str) -> str | None:
@@ -64,8 +66,15 @@ class MetisQAParser(BaseParser):
 
         # Also detect "Total" label on adjacent lines (Metis QA format)
         # e.g., "Total THC" / "24.46%" or "Total" / "28.87" / "288.7"
+        _section_for_total = None
         for i, line in enumerate(lines):
             stripped = line.strip()
+            line_lower = stripped.lower()
+            # Track section for standalone "Total" lines
+            if re.search(r"^cannabinoid", line_lower) and "complete" not in line_lower:
+                _section_for_total = "cannabinoids"
+            if re.search(r"^terpene", line_lower) and "complete" not in line_lower:
+                _section_for_total = "terpenes"
             m_total = re.match(r"^Total\s+(.+)$", stripped, re.IGNORECASE)
             if m_total:
                 label = m_total.group(1).strip()
@@ -80,7 +89,10 @@ class MetisQAParser(BaseParser):
                         results.append(f"Total {label}: {m_val.group(1)}%")
             # "Total" on its own line (value before on same line as "Total")
             if stripped.lower() == "total" and i + 2 < len(lines):
-                key = "total cannabinoids"
+                if _section_for_total == "terpenes":
+                    key = "total terpenes"
+                else:
+                    key = "total cannabinoids"
                 if key in seen:
                     continue
                 val1 = lines[i + 1].strip()
@@ -88,7 +100,10 @@ class MetisQAParser(BaseParser):
                 m1 = number_re.match(val1)
                 if m1 and not nd_re.match(val2):
                     seen.add(key)
-                    results.append(f"Total Cannabinoids: {m1.group(1)}%")
+                    if _section_for_total == "terpenes":
+                        results.append(f"Total Terpenes: {val2}%")
+                    else:
+                        results.append(f"Total Cannabinoids: {m1.group(1)}%")
 
         # Pass 2 – individual compound rows
         section = None  # "cannabinoids" or "terpenes"
@@ -126,17 +141,29 @@ class MetisQAParser(BaseParser):
             matched = self._match_compound(line_lower)
 
             # Try joining with next line for multi-word names
-            if matched is None and i + 1 < len(lines):
+            if i + 1 < len(lines):
                 next_line = lines[i + 1].strip()
-                next_normalized = self._normalize_name(next_line)
-                combined = f"{raw_line} {next_line}".lower()
-                combined_normalized = self._normalize_name(combined)
-                if inline_values_re.search(next_line) and not self._match_compound(next_normalized.lower()):
-                    matched = self._match_compound(combined_normalized)
-                    if matched is not None:
-                        raw_line = combined
-                        line_lower = combined_normalized.lower()
-                        i += 1
+                # Don't join if current line is a pure number (it's a value, not a compound name)
+                if not re.match(r'^\d+\.?\d*%?$', raw_line):
+                    # Never join if the next line starts with "Total" (keep it as a label)
+                    if not re.search(r"^total\s", next_line, re.IGNORECASE):
+                        next_normalized = self._normalize_name(next_line)
+                        combined = f"{raw_line} {next_line}".lower()
+                        combined_normalized = self._normalize_name(combined)
+                        if matched is not None and not inline_values_re.search(next_line):
+                            combined_match = self._match_compound(combined_normalized)
+                            if combined_match and len(combined_match) > len(matched):
+                                matched = combined_match
+                                raw_line = combined
+                                line_lower = combined_normalized.lower()
+                                i += 1
+                        elif matched is None and (inline_values_re.search(next_line) or self._match_compound(combined_normalized)):
+                            combined_match = self._match_compound(combined_normalized)
+                            if combined_match:
+                                matched = combined_match
+                                raw_line = combined
+                                line_lower = combined_normalized.lower()
+                                i += 1
 
             if matched is None or matched.lower() in seen:
                 i += 1
@@ -185,6 +212,7 @@ class MetisQAParser(BaseParser):
                     continue
                 ahead = [lines[i + j].strip() if i + j < len(lines) else "" for j in range(1, 13)]
                 numeric_values: list[str] = []
+                need_count = result_index + 1
                 for candidate_line in ahead:
                     if nd_re.match(candidate_line):
                         value = "ND"
@@ -200,6 +228,8 @@ class MetisQAParser(BaseParser):
                     m_num = number_re.match(candidate_line)
                     if m_num:
                         numeric_values.append(m_num.group(1))
+                        if len(numeric_values) >= need_count:
+                            break
                     else:
                         inline_nums = inline_values_re.findall(candidate_line)
                         for num_str in inline_nums:
@@ -207,6 +237,10 @@ class MetisQAParser(BaseParser):
                             if "." in num_str or int(num) >= 10:
                                 if num <= 999.99:
                                     numeric_values.append(num_str)
+                                    if len(numeric_values) >= need_count:
+                                        break
+                        if len(numeric_values) >= need_count:
+                            break
                     if value:
                         break
 
@@ -214,13 +248,15 @@ class MetisQAParser(BaseParser):
             if value is None and not below_loq and numeric_values:
                 if len(numeric_values) >= result_index:
                     pct = numeric_values[result_index - 1]
-                    # Append mg/g if available (cannabinoids: next value; terpenes: prev value)
-                    if len(numeric_values) >= result_index + 1:
+                    if section == "cannabinoids" and len(numeric_values) >= result_index + 1:
                         mg_val = numeric_values[result_index]
                         if float(mg_val) < 99999:
                             value = f"{pct}% ({mg_val} mg/g)"
                         else:
                             value = f"{pct}%"
+                    elif section == "terpenes" and len(numeric_values) >= 3:
+                        mg_val = numeric_values[1]
+                        value = f"{pct}% ({mg_val} mg/g)"
                     else:
                         value = f"{pct}%"
 
