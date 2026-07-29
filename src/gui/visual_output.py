@@ -233,21 +233,25 @@ class VisualOutputWidget(QScrollArea):
 
         self._layout.addWidget(info_widget)
 
-        parsed = _parse_items(raw_text)
-        canna = [(n, v, t, mg) for n, v, t, mg in parsed if t != "terpene"]
-        terps = [(n, v, t, mg) for n, v, t, mg in parsed if t == "terpene"]
-
         def sort_key(item: tuple) -> tuple:
             n, v, _, _ = item
             is_total = n.lower().startswith("total ")
             return (0 if is_total else 1, -v)
 
-        canna.sort(key=sort_key)
-        terps.sort(key=sort_key)
+        def parse_items_to_tuples(raw: list[str]) -> list[tuple[str, float, str, float | None]]:
+            text = "\n".join(raw)
+            return _parse_items(text)
 
-        self._layout.addWidget(_Section("CANNABINOIDS", canna))
-        self._layout.addWidget(_Section("TERPENES", terps))
+        # Section 1: blend — from result.items (raw text-extracted items)
+        blend_parsed = parse_items_to_tuples(result.items)
+        blend_canna = [(n, v, t, mg) for n, v, t, mg in blend_parsed if t != "terpene"]
+        blend_terps = [(n, v, t, mg) for n, v, t, mg in blend_parsed if t == "terpene"]
+        blend_canna.sort(key=sort_key)
+        blend_terps.sort(key=sort_key)
+        self._layout.addWidget(_Section("CANNABINOIDS", blend_canna))
+        self._layout.addWidget(_Section("TERPENES", blend_terps))
 
+        # Sections 2, 3, ...: individual strains from OCR
         strain_groups = result.metadata.get("strain_groups", [])
         for strain_name, strain_items in strain_groups:
             sep = QFrame()
@@ -255,8 +259,7 @@ class VisualOutputWidget(QScrollArea):
             sep.setStyleSheet("background-color: #bbb; max-height: 2px; margin: 12px 0;")
             self._layout.addWidget(sep)
 
-            strain_text = "\n".join(strain_items)
-            strain_parsed = _parse_items(strain_text)
+            strain_parsed = parse_items_to_tuples(strain_items)
             s_canna = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t != "terpene"]
             s_terps = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t == "terpene"]
             s_canna.sort(key=sort_key)
