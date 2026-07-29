@@ -234,6 +234,10 @@ def _normalize_compound_name(name: str) -> str:
     normalized = normalized.replace("beta--", "beta-")
     normalized = normalized.replace("gamma--", "gamma-")
     normalized = normalized.replace("delta--", "delta-")
+    # Handle OCR misreads of Greek letter prefixes (a→α, b→β, y→γ)
+    normalized = re.sub(r'\ba-(?=[A-Za-z])', 'alpha-', normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r'\bb-(?=[A-Za-z])', 'beta-', normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r'\by-(?=[A-Za-z])', 'gamma-', normalized, flags=re.IGNORECASE)
     return normalized
 
 

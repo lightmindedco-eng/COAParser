@@ -168,6 +168,9 @@ def _parse_items(text: str) -> list[tuple[str, float, str, float | None]]:
                 val = 999.0
                 mg = None
             stripped = _strip_name(name).lower()
+            stripped = re.sub(r'\ba-(?=[A-Za-z])', 'alpha-', stripped)
+            stripped = re.sub(r'\bb-(?=[A-Za-z])', 'beta-', stripped)
+            stripped = re.sub(r'\by-(?=[A-Za-z])', 'gamma-', stripped)
             is_terp = stripped in {
                 "myrcene", "limonene", "pinene", "linalool", "caryophyllene",
                 "humulene", "terpinolene", "ocimene", "bisabolol", "nerolidol",
