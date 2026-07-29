@@ -21,6 +21,10 @@ class AerolabsParser(BaseParser):
         normalized = normalized.replace("\u03b3", "gamma-").replace("\u0393", "gamma-")
         for letter in ["delta", "alpha", "beta", "gamma"]:
             normalized = normalized.replace(f"{letter}--", f"{letter}-")
+        # Handle OCR misreads of Greek letter prefixes (a→α, b→β, y→γ)
+        normalized = re.sub(r'\ba-(?=[A-Za-z])', 'alpha-', normalized, flags=re.IGNORECASE)
+        normalized = re.sub(r'\bb-(?=[A-Za-z])', 'beta-', normalized, flags=re.IGNORECASE)
+        normalized = re.sub(r'\by-(?=[A-Za-z])', 'gamma-', normalized, flags=re.IGNORECASE)
         return normalized
 
     def _match_compound(self, line_lower: str) -> str | None:

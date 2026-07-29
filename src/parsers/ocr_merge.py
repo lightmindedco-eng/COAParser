@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -112,6 +113,7 @@ def extract_ocr_items(path: str | Path) -> list[tuple[str, list[str]]]:
             strain = _detect_strain(text)
             if strain:
                 lines = [l.rstrip("\n") for l in text.split("\n")]
+                lines = _split_two_column_lines(lines)
                 parsed = parser.parse(lines)
                 items = [i for i in parsed.get("items", []) if _is_valid_item(i)]
                 if items:
@@ -124,6 +126,75 @@ def extract_ocr_items(path: str | Path) -> list[tuple[str, list[str]]]:
 
     doc.close()
     return [(s, list(items)) for s, items in results.items()]
+
+
+def _load_terpenes() -> list[str]:
+    """Load terpene names from data file, including OCR-variant forms."""
+    data_dir = Path(__file__).resolve().parents[2] / "data"
+    terp_path = data_dir / "terpenes.json"
+    if not terp_path.exists():
+        return []
+    with open(terp_path, encoding="utf-8") as f:
+        data = json.load(f)
+    base = data.get("terpenes", [])
+    seen: set[str] = set()
+    for name in base:
+        lower = name.lower()
+        seen.add(lower)
+        # Generate OCR variants for Greek letter prefixes
+        if "β-" in lower or "beta-" in lower:
+            seen.add(lower.replace("β-", "b-").replace("beta-", "b-"))
+        if "α-" in lower or "alpha-" in lower:
+            seen.add(lower.replace("α-", "a-").replace("alpha-", "a-"))
+        if "γ-" in lower or "gamma-" in lower:
+            seen.add(lower.replace("γ-", "y-").replace("gamma-", "y-"))
+    return sorted(seen, key=len, reverse=True)
+
+
+_TERPENES_CACHE: list[str] | None = None
+
+
+def _get_terpenes() -> list[str]:
+    global _TERPENES_CACHE
+    if _TERPENES_CACHE is None:
+        _TERPENES_CACHE = _load_terpenes()
+    return _TERPENES_CACHE
+
+
+def _split_two_column_lines(lines: list[str]) -> list[str]:
+    """Split lines containing two terpene entries into separate lines."""
+    terpenes = _get_terpenes()
+    if not terpenes:
+        return lines
+
+    result: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            result.append(line)
+            continue
+
+        line_lower = stripped.lower()
+        matches: list[tuple[int, int, str]] = []
+        for terp in terpenes:
+            for m in re.finditer(rf"\b{re.escape(terp)}\b", line_lower):
+                matches.append((m.start(), m.end(), terp))
+
+        if len(matches) < 2:
+            result.append(line)
+            continue
+
+        matches.sort()
+        gap = matches[1][0] - matches[0][1]
+        if gap >= 5 and matches[0][0] < 35:
+            left = stripped[:matches[1][0]].strip()
+            right = stripped[matches[1][0]:].strip()
+            result.append(left)
+            result.append(right)
+        else:
+            result.append(line)
+
+    return result
 
 
 _ITEM_RE = re.compile(r"^[\w\s'/-]+:\s*[\d.]+%\s*(?:\([\d.]+\s*mg/unit\))?$")
