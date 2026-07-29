@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.gui.error_report import ErrorReportDialog
 from src.gui.visual_output import VisualOutputWidget
 from src.parser import COAParser
 from src.core.batch import BatchProcessor
@@ -567,6 +568,12 @@ class MainWindow(QMainWindow):
             act_output = QAction("Open Output File Location", self)
             act_output.triggered.connect(lambda: _open_file_location(out_path))
             menu.addAction(act_output)
+
+        menu.addSeparator()
+        out_path = str(Path("Output") / output_name) if output_name else None
+        act_report = QAction("Submit Error Report", self)
+        act_report.triggered.connect(lambda: ErrorReportDialog(file_path, out_path, self).exec())
+        menu.addAction(act_report)
 
         menu.exec(self.file_list.mapToGlobal(pos))
 
