@@ -230,7 +230,7 @@ class AerolabsParser(BaseParser):
             # Check for >ULOQ or <LOQ/<value on the same line
             if value is None:
                 if re.search(r">ULOQ", raw_line, re.IGNORECASE):
-                    value = ">ULOQ"
+                    value = "ND"
                 elif re.search(r"<\s*(?:LOQ|[\d.]+)", raw_line, re.IGNORECASE):
                     below_loq = True
 
