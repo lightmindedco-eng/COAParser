@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
 from .base import BaseParser
+
+logger = logging.getLogger(__name__)
 
 
 class AerolabsParser(BaseParser):
@@ -358,7 +361,7 @@ class AerolabsParser(BaseParser):
                         mg_val = float(value.rstrip("%"))
                         mg_unit_items.append((matched, mg_val))
                     except ValueError:
-                        pass
+                        logger.debug("Could not parse mg value: %s", value)
                 else:
                     results.append(f"{matched}: {value}")
             else:

@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
+import traceback
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable, DefaultDict
+
+from src.core.logger import log_exception
+
+logger = logging.getLogger("coa_parser")
 
 
 class BatchProcessor:
@@ -65,6 +71,8 @@ class BatchProcessor:
                 "status": "success",
             })
         except Exception as exc:
+            logger.error("Batch processing failed for %s: %s", pdf_file.name, exc)
+            log_exception()
             self.total_failed += 1
             self.results_by_lab["error"].append({
                 "file": pdf_file.name,

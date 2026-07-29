@@ -1,0 +1,38 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000170CD000007028.pdf
+Detected format : highres
+============================================================
+
+Product : INFUSED SLIMS - GLAZED ICE - 0.5g
+METRC Category : Plant, Enhanced/Infused Preroll
+
+CANNABINOIDS
+------------------------------
+  Total THC: 35.78%
+  Total CBD: 0.04%
+  Total Cannabinoids: 41.54%
+  THCa: 39.85%
+  Delta-9-THC: 0.84%
+  Delta-8-THC: 0.03%
+  THCV: 0.05%
+  CBDa: 0.05%
+  THCVa: 0.30%
+  CBGa: 0.29%
+  CBG: 0.09%
+  CBC: 0.04%
+
+TERPENES
+------------------------------
+  Total Terpenes: 1.22%
+  Myrcene: 0.02%
+  beta-Pinene: 0.01%
+  Limonene: 0.06%
+  Terpinolene: 0.02%
+  Linalool: 0.52%
+  Geraniol: 0.01%
+  beta-Caryophyllene: 0.25%
+  alpha-Humulene: 0.08%
+  Nerolidol: 0.24%
+
+============================================================

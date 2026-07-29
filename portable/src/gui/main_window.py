@@ -1,9 +1,15 @@
+import logging
 import re
 import subprocess
+import traceback
 from collections import defaultdict
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
+
+from src.core.logger import log_exception
+
+logger = logging.getLogger("coa_parser")
 from PySide6.QtGui import QAction
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
@@ -84,6 +90,8 @@ class _PreloadWorker(QObject):
                 date = result.metadata.get("report_date") or ""
                 company = result.metadata.get("company_name") or ""
             except Exception:
+                logger.error("Preload failed for %s", pdf)
+                log_exception()
                 prod_name = out_name = category = date = company = ""
             self.updated.emit(str(pdf), prod_name, out_name, category, date, company)
             self.progress.emit(idx, total)
@@ -634,6 +642,8 @@ class MainWindow(QMainWindow):
             self.label.setText(msg)
             self._update_list_item(self.selected_file, product_name, output_name, category, date, company)
         except Exception as exc:
+            logger.error("Parse failed for %s: %s", self.selected_file, exc)
+            log_exception()
             self._update_list_item(self.selected_file, None, None)
             QMessageBox.critical(self, "Parse failed", str(exc))
 

@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Any
 
 from src.core.detector import detect_format, detect_product_name, detect_company_name, detect_metrc_category, detect_report_date
 from src.core.extractor import extract_text, read_text
+from src.core.logger import log_exception
 from src.core.writer import write_output
 from src.models.result import ParsedResult
+
+logger = logging.getLogger("coa_parser")
 from src.parsers.aerolabs import AerolabsParser
 from src.parsers.baseline import BaselineParser
 from src.parsers.confident import ConfidentParser
@@ -34,15 +38,25 @@ class COAParser:
 
     def parse_file(self, file_path: str | Path, output_dir: str | None = None) -> ParsedResult:
         path = Path(file_path)
-        content = read_text(path)
-        lines = extract_text(content)
+        try:
+            content = read_text(path)
+            lines = extract_text(content)
+        except Exception:
+            logger.error("Failed to read or extract text from %s", path.name)
+            log_exception()
+            return ParsedResult(format_name="error", items=[], metadata={"source_file": str(path), "error": "read/extract failed"})
         format_name = detect_format(content)
         product_name = detect_product_name(lines)
         company_name = detect_company_name(lines)
         metrc_category = detect_metrc_category(lines)
         report_date = detect_report_date(lines)
         parser = self.parsers.get(format_name, self.parsers["aerolabs"])
-        parsed = parser.parse(lines)
+        try:
+            parsed = parser.parse(lines)
+        except Exception:
+            logger.error("Parser %s failed for %s", format_name, path.name)
+            log_exception()
+            return ParsedResult(format_name="error", items=[], metadata={"source_file": str(path), "error": f"{format_name} parser crashed"})
 
         items = parsed.get("items", [])
 
@@ -55,10 +69,14 @@ class COAParser:
             "report_date": report_date,
         }
 
-        if has_embedded_coa_images(path):
-            ocr_data = extract_ocr_items(path)
-            if ocr_data:
-                metadata["strain_groups"] = ocr_data
+        try:
+            if has_embedded_coa_images(path):
+                ocr_data = extract_ocr_items(path)
+                if ocr_data:
+                    metadata["strain_groups"] = ocr_data
+        except Exception:
+            logger.warning("OCR image extraction failed for %s", path.name)
+            log_exception()
 
         result = ParsedResult(
             format_name=format_name,
@@ -67,16 +85,20 @@ class COAParser:
         )
 
         if output_dir is not None:
-            strain_groups = result.metadata.get("strain_groups", [])
-            report = _build_report(path.name, format_name, result.items, product_name, metrc_category, strain_groups)
-            output_path = write_output(
-                output_dir, path.name, report,
-                product_name=product_name,
-                company_name=company_name,
-                lab_name=format_name,
-                report_date=report_date,
-            )
-            result.output_path = str(output_path)
+            try:
+                strain_groups = result.metadata.get("strain_groups", [])
+                report = _build_report(path.name, format_name, result.items, product_name, metrc_category, strain_groups)
+                output_path = write_output(
+                    output_dir, path.name, report,
+                    product_name=product_name,
+                    company_name=company_name,
+                    lab_name=format_name,
+                    report_date=report_date,
+                )
+                result.output_path = str(output_path)
+            except Exception:
+                logger.error("Failed to write output for %s", path.name)
+                log_exception()
 
         return result
 

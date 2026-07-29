@@ -1,10 +1,17 @@
-# COAParser Portable
+# COAParser
 
-Copy this folder to another Windows machine and run setup_portable.bat the first time.
+A starter Python project for a universal COA parser built with PySide6.
 
-After setup completes, you can start the app with launcher.bat or run_fresh.bat.
+## Run
 
-## OCR note
+Install dependencies:
 
-Scanned PDFs require Tesseract OCR to be installed on the machine.
-Install Tesseract from https://github.com/UB-Mannheim/tesseract/wiki and make sure the executable is available on PATH.
+```bash
+pip install -r requirements.txt
+```
+
+Run the application:
+
+```bash
+python app.py
+```

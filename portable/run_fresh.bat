@@ -3,7 +3,7 @@ REM Script to clear Python cache and run the program fresh
 setlocal enabledelayedexpansion
 
 echo ============================================================
-echo COAParser (Portable) - Fresh Run (Cache Cleared)
+echo COAParser - Fresh Run (Cache Cleared)
 echo ============================================================
 echo.
 

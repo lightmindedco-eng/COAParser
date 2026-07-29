@@ -1,0 +1,37 @@
+COAParser/
+│
+├── src/
+│   ├── core/
+│   │   ├── detector.py
+│   │   ├── extractor.py
+│   │   ├── normalizer.py
+│   │   ├── writer.py
+│   │   └── logger.py
+│   │
+│   ├── parsers/
+│   │   ├── aerolabs.py
+│   │   ├── gateway.py
+│   │   ├── confident.py
+│   │   └── base.py
+│   │
+│   └── parser.py
+│
+├── data/
+│   ├── cannabinoids.json
+│   ├── terpenes.json
+│   └── aliases.json
+│
+├── Input/
+├── Output/
+├── Logs/
+├── Temp/
+│
+├── tests/
+│
+├── docs/
+│
+├── extract.bat
+├── requirements.txt
+├── config.json
+├── README.md
+└── LICENSE

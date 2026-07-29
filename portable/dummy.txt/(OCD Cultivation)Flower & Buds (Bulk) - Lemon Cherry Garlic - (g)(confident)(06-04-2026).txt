@@ -1,0 +1,41 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000020A7000000739.pdf
+Detected format : confident
+============================================================
+
+Product : Flower & Buds (Bulk) - Lemon Cherry Garlic - (g)
+METRC Category : Plant, Other
+
+CANNABINOIDS
+------------------------------
+  Total THC: 25.120%
+  Total CBD: 0.191%
+  THCa: 28.125%
+  Delta-9-THC: 0.454%
+  THCV: 0.358%
+  CBDa: 0.099%
+  CBD: 0.105%
+  CBGa: 1.095%
+  CBG: 0.573%
+  Farnesene: 0.125%
+
+TERPENES
+------------------------------
+  Total Terpenes: 2.633%
+  Limonene: 0.539%
+  beta-Myrcene: 0.432%
+  beta-Caryophyllene: 0.296%
+  Linalool: 0.212%
+  Nerolidol: 0.14%
+  beta-Pinene: 0.138%
+  alpha-Pinene: 0.104%
+  alpha-Humulene: 0.094%
+  alpha-Bisabolol: 0.076%
+  Camphene: 0.048%
+  Fenchol: 0.046%
+  alpha-Terpineol: 0.033%
+  Guaiol: 0.016%
+  trans-Nerolidol: 0.01%
+
+============================================================

@@ -1,0 +1,14 @@
+Python: C:\Users\Owner\AppData\Local\Programs\Python\Python311\python.exe
+  pytesseract: OK
+  fitz: OK
+  PIL: OK
+  pypdf: OK
+  PyPDF2: MISSING
+Tesseract path: C:\Program Files\Tesseract-OCR\tesseract.exe
+Tesseract exists: True
+
+Test PDF: 0000324224.PDF
+fitz text length: 10164
+fitz sample: 'MMK FARMING\n66903 E 330 RD\nJAY, OK 74346\nMMKFARMING@GMAIL.COM\n2245953792\nLicense #: GAAI-AAXJ-YWMT\nCertificate of Analysis\nFinal\nDate Released: 11/25/2025   1:15:08PM   \nApples&Bananas Prerolls\nSample #: 80320, Weight: 8.20g, Unit Count: \nOrder #: X251119-0006\nCategory/Type: Plant, Raw Preroll\nDate '
+OCR text length: 2000
+OCR sample: 'MMK FARMING\n66903 E 330 RD\n\nCertificate of Analysis\n\nJAY, OK 74346 Final\nMMKFARMING@GMAIL.COM [nl]\n2245953792\n\nLicense #: GAAI-AAXJ-YWMT\n\nease hy ee &B &\n\nApples&Bananas Prerolls TolalCannabinoids TotalTHC TotalCBD TotalTerpenes Moisture Heavy Metals\nSample #: 80320, Weight: 8.20g, Unit Count: 22.9%'

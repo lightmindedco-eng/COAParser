@@ -1,1 +1,12 @@
 
+=== Error Report ===
+Date:    2026-07-29 15:47:07
+Input:   Input\1A40E01000025BC000061519.pdf
+Output:  Output\(OPERATING MFG, LLC)50mg Peach Indica THC Gummies (100mg - 1000mg Packs)(confident)(12-04-2025).txt
+
+Description:
+  Parser is using mg/g instead of mg/unit even though labeled as such.
+  
+  Expected (55.39 mg/unit)
+
+==================

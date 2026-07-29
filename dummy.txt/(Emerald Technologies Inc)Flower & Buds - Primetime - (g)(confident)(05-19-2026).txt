@@ -1,0 +1,36 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000021A9000024440.pdf
+Detected format : confident
+============================================================
+
+Product : Flower & Buds - Primetime - (g)
+METRC Category : Plant, Flower - Cured, Indoor
+
+CANNABINOIDS
+------------------------------
+  Total THC: 20.05%
+  THCa: 22.33%
+  Delta-9-THC: 0.47%
+
+TERPENES
+------------------------------
+  Total Terpenes: 2.81%
+  beta-Myrcene: 0.924%
+  beta-Caryophyllene: 0.327%
+  alpha-Pinene: 0.27%
+  trans-Ocimene: 0.191%
+  Linalool: 0.164%
+  alpha-Humulene: 0.146%
+  Limonene: 0.143%
+  Guaiol: 0.126%
+  beta-Pinene: 0.109%
+  cis-Ocimene: 0.086%
+  alpha-Bisabolol: 0.0706%
+  Caryophyllene Oxide: 0.0641%
+  Nerolidol: 0.0544%
+  Terpinolene: 0.0512%
+  Camphene: 0.0439%
+  Eucalyptol: 0.0434%
+
+============================================================

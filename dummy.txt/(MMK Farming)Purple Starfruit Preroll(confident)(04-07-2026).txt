@@ -1,0 +1,40 @@
+============================================================
+COA Parser Report
+Source file : 1A40E0100009219000007714.pdf
+Detected format : confident
+============================================================
+
+Product : Purple Starfruit Preroll
+METRC Category : Plant, Preroll
+
+CANNABINOIDS
+------------------------------
+  Total THC: 18.60%
+  Total Cannabinoids: 21.44%
+  THCa: 19.31%
+  Delta-9-THC: 1.67%
+  CBGa: 0.46%
+
+TERPENES
+------------------------------
+  Total Terpenes: 2.096%
+  Limonene: 0.589%
+  beta-Caryophyllene: 0.475%
+  alpha-Humulene: 0.174%
+  Linalool: 0.149%
+  alpha-Bisabolol: 0.01%
+  Geraniol: 0.084%
+  beta-Myrcene: 0.066%
+  beta-Pinene: 0.055%
+  Nerolidol: 0.05%
+  alpha-Pinene: 0.045%
+  Ocimene: 0.045%
+  cis-Ocimene: 0.035%
+  Guaiol: 0.035%
+  Terpinolene: 0.029%
+  Eucalyptol: 0.024%
+  gamma-Terpinene: 0.019%
+  p-Cymene: 0.017%
+  Camphene: 0.016%
+
+============================================================

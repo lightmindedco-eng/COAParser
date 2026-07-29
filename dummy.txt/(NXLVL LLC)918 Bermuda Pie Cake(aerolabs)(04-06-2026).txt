@@ -1,0 +1,43 @@
+============================================================
+COA Parser Report
+Source file : 1A40E0100016B49000017130.pdf
+Detected format : aerolabs
+============================================================
+
+Product : 918 Bermuda Pie Cake
+METRC Category : Plant, Other
+
+CANNABINOIDS
+------------------------------
+  Total THC: 26.000%
+  Total CBD: 0.234%
+  THCa: 28.017%
+  Delta-9-THC: 1.429%
+  THCV: 0.99%
+  CBDa: 0.095%
+  CBD: 0.151%
+  CBN: 0.048%
+  CBGa: 0.698%
+  CBG: 0.469%
+  Farnesene: 0.044%
+
+TERPENES
+------------------------------
+  Total Terpenes: 2.859%
+  beta-Caryophyllene: 0.638%
+  Limonene: 0.579%
+  Linalool: 0.436%
+  Guaiol: 0.150%
+  alpha-Bisabolol: 0.122%
+  alpha-Terpineol: 0.113%
+  alpha-Humulene: 0.107%
+  Nerolidol: 0.107%
+  trans-Nerolidol: 0.098%
+  beta-Pinene: 0.093%
+  Fenchol: 0.078%
+  alpha-Pinene: 0.065%
+  beta-Myrcene: 0.062%
+  Camphene: 0.020%
+  Geranyl Acetate: 0.014%
+
+============================================================

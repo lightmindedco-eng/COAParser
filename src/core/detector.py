@@ -85,8 +85,13 @@ def detect_product_name(lines: list[str]) -> str | None:
         colon_pos = stripped.find(":")
         if colon_pos >= 0 and colon_pos < 25:
             continue
+        # Match lines with mg + THC/CBD keyword (standard format)
         if re.search(r"\b\d+\s*mg\b", stripped, re.IGNORECASE) and re.search(r"\b(thc|cbd)\b", stripped, re.IGNORECASE):
             if not re.match(r"^[\d\s/\-:.,()%]+$", stripped):
+                return _clean_product_name(stripped)
+        # Also match dash-separated product names with weight in parentheses (e.g., "Flower & Buds - Bittersweet - (g)")
+        if " - " in stripped and re.search(r"\([\d.]*\s*(?:g|mg|unit|oz|ml)\)", stripped, re.IGNORECASE):
+            if not re.search(r"(batch\s+#|metrc|harvest|production)", stripped, re.IGNORECASE):
                 return _clean_product_name(stripped)
 
     # Pass 3: "Strain:" or "Strain Name:" label (Aerolabs / Confident LIMS / HighRes Labs)
@@ -137,7 +142,14 @@ def detect_product_name(lines: list[str]) -> str | None:
                     next_line = lines[k].strip()
                     if not next_line or ":" in next_line:
                         break
-                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate)", next_line, re.IGNORECASE):
+                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate|client|produced|amended|collection|completed)", next_line, re.IGNORECASE):
+                        break
+                    # Stop at company names (all caps, 2+ words), addresses, or emails
+                    if re.match(r"^[A-Z][A-Z\s]+$", next_line) and len(next_line.split()) >= 2:
+                        break
+                    if re.search(r"^\d+\s+\w+\s+(st|street|rd|road|ave|avenue|blvd|drive|dr|ln|lane)", next_line, re.IGNORECASE):
+                        break
+                    if re.search(r"@|\.com|www\.", next_line, re.IGNORECASE):
                         break
                     if len(next_line) < 30:
                         full_candidate = full_candidate + " " + next_line

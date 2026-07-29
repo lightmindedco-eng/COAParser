@@ -4,12 +4,15 @@ import concurrent.futures
 import hashlib
 import io
 import json
+import logging
 import os
 import re
 from pathlib import Path
 from typing import Any
 
 from tesseract_config import get_tesseract_path
+
+logger = logging.getLogger(__name__)
 
 _HAS_FITZ = False
 _HAS_OCR = False
@@ -21,14 +24,14 @@ try:
     _fitz = _fitz_module
     _HAS_FITZ = True
 except Exception:
-    pass
+    logger.debug("fitz (PyMuPDF) not available")
 
 _pytess = None
 try:
     import pytesseract
     _HAS_OCR = True
 except ImportError:
-    pass
+    logger.debug("pytesseract not available")
 
 _pil = None
 try:
@@ -36,7 +39,7 @@ try:
     _pil = Image
     _HAS_PIL = True
 except ImportError:
-    pass
+    logger.debug("PIL/Pillow not available")
 
 _LARGE_IMAGE_MIN = 1000
 _CACHE_DIR = Path.home() / ".cache" / "coa_parser"
@@ -63,7 +66,7 @@ def has_embedded_coa_images(path: str | Path) -> bool:
                     return True
         doc.close()
     except Exception:
-        pass
+        logger.debug("Failed to inspect images in %s", path)
     return False
 
 

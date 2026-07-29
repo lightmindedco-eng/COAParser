@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
 from tesseract_config import get_tesseract_path
+
+logger = logging.getLogger("coa_parser")
 
 _TESS_PATH = get_tesseract_path()
 if _TESS_PATH and os.path.isfile(_TESS_PATH):
@@ -13,7 +16,7 @@ if _TESS_PATH and os.path.isfile(_TESS_PATH):
         import pytesseract as _pytess  # type: ignore
         _pytess.pytesseract.tesseract_cmd = _TESS_PATH
     except Exception:
-        pass
+        logger.debug("Could not set pytesseract cmd to %s", _TESS_PATH)
 
 
 def read_text(path: str | Path) -> str:
@@ -22,7 +25,8 @@ def read_text(path: str | Path) -> str:
     if file_path.suffix.lower() == ".pdf":
         try:
             import fitz  # type: ignore
-        except Exception:
+        except Exception as e:
+            logger.debug("fitz import failed: %s", e)
             fitz = None
 
         try:
@@ -31,7 +35,8 @@ def read_text(path: str | Path) -> str:
             tess_path = get_tesseract_path()
             if tess_path:
                 pytesseract.pytesseract.tesseract_cmd = tess_path
-        except Exception:
+        except Exception as e:
+            logger.debug("OCR imports failed: %s", e)
             pytesseract = None
             Image = None
 
@@ -42,30 +47,28 @@ def read_text(path: str | Path) -> str:
                 for page in doc:
                     text = page.get_text().strip()
                     if text:
-                        # Page has embedded text — use it directly
                         page_texts.append(text)
                     elif pytesseract is not None and Image is not None:
-                        # Page is a scanned image — OCR it
                         try:
                             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
                             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                             ocr_text = pytesseract.image_to_string(img).strip()
                             if ocr_text:
                                 page_texts.append(ocr_text)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.warning("OCR failed for page %d of %s: %s", page.number + 1, file_path.name, e)
                 if page_texts:
                     return "\n".join(page_texts)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("fitz PDF open failed for %s: %s", file_path.name, e)
 
-        # pypdf fallback (text-only PDFs)
         try:
             from pypdf import PdfReader  # type: ignore
         except Exception:
             try:
                 from PyPDF2 import PdfReader  # type: ignore
             except Exception:
+                logger.debug("pypdf/PyPDF2 not available")
                 PdfReader = None  # type: ignore
 
         if PdfReader is not None:
@@ -74,8 +77,8 @@ def read_text(path: str | Path) -> str:
                 extracted = "\n".join(page.extract_text() or "" for page in reader.pages)
                 if extracted.strip():
                     return extracted
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("pypdf fallback failed for %s: %s", file_path.name, e)
 
         lowered_name = file_path.name.lower()
         hints = []
@@ -92,7 +95,8 @@ def read_text(path: str | Path) -> str:
 
     try:
         return file_path.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
+    except Exception as e:
+        logger.error("Could not read text file %s: %s", file_path.name, e)
         return f"Could not read {file_path.name}"
 
 

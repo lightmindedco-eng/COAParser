@@ -1,0 +1,35 @@
+============================================================
+COA Parser Report
+Source file : 1A40E0100009219000007710.pdf
+Detected format : confident
+============================================================
+
+Product : Citron Shake/Trim
+METRC Category : Plant, Trim
+
+CANNABINOIDS
+------------------------------
+  Total THC: 18.51%
+  Total Cannabinoids: 21.23%
+  THCa: 16.64%
+  Delta-9-THC: 3.92%
+  CBGa: 0.67%
+
+TERPENES
+------------------------------
+  Total Terpenes: 1.222%
+  beta-Caryophyllene: 0.337%
+  Limonene: 0.257%
+  Linalool: 0.128%
+  alpha-Humulene: 0.01%
+  Geraniol: 0.08%
+  alpha-Bisabolol: 0.076%
+  beta-Myrcene: 0.063%
+  Ocimene: 0.032%
+  beta-Pinene: 0.03%
+  Terpinolene: 0.022%
+  alpha-Pinene: 0.021%
+  p-Cymene: 0.015%
+  Camphene: 0.014%
+
+============================================================

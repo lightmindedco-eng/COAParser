@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
 from .base import BaseParser
+
+logger = logging.getLogger(__name__)
 
 
 class GatewayParser(BaseParser):
@@ -78,7 +81,7 @@ class GatewayParser(BaseParser):
                         try:
                             total_terpenes_value = float(value)
                         except ValueError:
-                            pass
+                            logger.debug("Could not parse total terpenes value: %s", value)
 
         # Pass 1b - "Total X" on one line, numeric value on the next line
         _valid_totals = {
@@ -109,7 +112,7 @@ class GatewayParser(BaseParser):
                             try:
                                 total_terpenes_value = float(m_val.group(1))
                             except ValueError:
-                                pass
+                                logger.debug("Could not parse total terpenes m_val: %s", m_val.group(1))
 
         # Detect if cannabinoid section uses mg/unit with no direct % column
         # e.g., "Cannabinoids by LC-DAD" with mg/unit header and totals in mg/unit
@@ -213,14 +216,14 @@ class GatewayParser(BaseParser):
                         val_pct = float(value.rstrip("%"))
                         terpene_items.append((matched, val_pct))
                     except ValueError:
-                        pass
+                        logger.debug("Could not parse terpene pct: %s", value)
                 elif cannabinoid_uses_mg_unit:
                     try:
                         mg_val = float(value.rstrip("%"))
                         if mg_val >= 0.001:
                             cannabinoid_mg_unit_items.append((matched, mg_val))
                     except ValueError:
-                        pass
+                        logger.debug("Could not parse cannabinoid mg/unit: %s", value)
                 else:
                     results.append(f"{matched}: {value}")
             else:

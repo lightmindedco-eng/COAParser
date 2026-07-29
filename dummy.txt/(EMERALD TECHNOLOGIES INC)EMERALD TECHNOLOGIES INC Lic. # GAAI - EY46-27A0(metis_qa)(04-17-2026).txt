@@ -1,0 +1,38 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000021A9000024105.pdf
+Detected format : metis_qa
+============================================================
+
+Product : EMERALD TECHNOLOGIES INC Lic. # GAAI - EY46-27A0
+METRC Category : Plant, Flower - Cured
+
+CANNABINOIDS
+------------------------------
+  Total Cannabinoids: 28.87%
+  THCa: 27.32% (273.2 mg/g)
+  Delta-9-THC: 0.50% (5.0 mg/g)
+  CBGa: 0.47% (4.7 mg/g)
+  CBCa: 0.23% (2.3 mg/g)
+  CBG: 0.18% (1.8 mg/g)
+  THCVa: 0.11% (1.1 mg/g)
+  CBDa: 0.06% (0.6 mg/g)
+  trans-beta-Farnesene: 0.092% (0.92 mg/g)
+
+TERPENES
+------------------------------
+  Total Terpenes: 2.282%
+  d-Limonene: 0.593% (5.93 mg/g)
+  beta-Caryophyllene: 0.492% (4.92 mg/g)
+  Linalool: 0.258% (2.58 mg/g)
+  alpha-Humulene: 0.222% (2.22 mg/g)
+  beta-Pinene: 0.113% (1.13 mg/g)
+  beta-Myrcene: 0.111% (1.11 mg/g)
+  Fenchol: 0.092% (0.92 mg/g)
+  alpha-Terpineol: 0.087% (0.87 mg/g)
+  alpha-Pinene: 0.074% (0.74 mg/g)
+  Ocimene: 0.068% (0.68 mg/g)
+  alpha-Bisabolol: 0.056% (0.56 mg/g)
+  Caryophyllene Oxide: 0.023% (0.23 mg/g)
+
+============================================================

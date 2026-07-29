@@ -1,0 +1,34 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000068B8000021765.pdf
+Detected format : confident
+============================================================
+
+Product : Gold Drop - Liquid DIamond - Green Crack - 1g
+METRC Category : Concentrates & Extracts, Diamonds
+
+CANNABINOIDS
+------------------------------
+  Total THC: 94.56%
+  Total Cannabinoids: 95.53%
+  Total THCV: 0.52%
+  THCa: 0.53%
+  Delta-9-THC: 94.1%
+  THCV: 0.52%
+  CBN: 0.45%
+
+TERPENES
+------------------------------
+  Total Terpenes: 3.74%
+  beta-Myrcene: 0.69%
+  beta-Caryophyllene: 0.63%
+  alpha-Pinene: 0.59%
+  Limonene: 0.51%
+  beta-Pinene: 0.46%
+  Linalool: 0.37%
+  alpha-Humulene: 0.2%
+  alpha-Bisabolol: 0.2%
+  Valencene: 0.06%
+  Guaiol: 0.03%
+
+============================================================
