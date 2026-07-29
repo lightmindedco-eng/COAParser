@@ -63,7 +63,9 @@ class _BarRow(QWidget):
 
         layout.addWidget(track, stretch=1)
 
-        if mg is not None:
+        if value == 999.0:
+            val_label = QLabel(">ULOQ")
+        elif mg is not None:
             val_label = QLabel(f"{value:.3f}%  ({mg:.3f} mg/unit)")
         else:
             val_label = QLabel(f"{value:.3f}%")
@@ -156,11 +158,15 @@ def _parse_items(text: str) -> list[tuple[str, float, str, float | None]]:
     result = []
     for line in text.split("\n"):
         line = line.strip()
-        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*(?:\(([\d.]+)\s*mg/unit\))?\s*$", line)
+        m = re.match(r"^\s*(.+?)\s*:\s*(?:([\d.]+)%|(>ULOQ))\s*(?:\(([\d.]+)\s*mg/unit\))?\s*$", line)
         if m:
             name = m.group(1).strip()
-            val = float(m.group(2))
-            mg = float(m.group(3)) if m.group(3) else None
+            if m.group(2):
+                val = float(m.group(2))
+                mg = float(m.group(4)) if m.group(4) else None
+            else:
+                val = 999.0
+                mg = None
             stripped = _strip_name(name).lower()
             is_terp = stripped in {
                 "myrcene", "limonene", "pinene", "linalool", "caryophyllene",

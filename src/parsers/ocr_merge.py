@@ -197,7 +197,7 @@ def _split_two_column_lines(lines: list[str]) -> list[str]:
     return result
 
 
-_ITEM_RE = re.compile(r"^[\w\s'/-]+:\s*[\d.]+%\s*(?:\([\d.]+\s*mg/unit\))?$")
+_ITEM_RE = re.compile(r"^[\w\s'/-]+:\s*(?:[\d.]+%|>ULOQ)(?:\s*\([\d.]+\s*mg/unit\))?$")
 
 
 def _is_valid_item(item: str) -> bool:

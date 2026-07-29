@@ -227,9 +227,16 @@ class AerolabsParser(BaseParser):
                 if len(parts) > 1 and re.search(r"\bND\b", parts[1], re.IGNORECASE):
                     value = "ND"
 
+            # Check for >ULOQ or <LOQ/<value on the same line
+            if value is None:
+                if re.search(r">ULOQ", raw_line, re.IGNORECASE):
+                    value = ">ULOQ"
+                elif re.search(r"<\s*(?:LOQ|[\d.]+)", raw_line, re.IGNORECASE):
+                    below_loq = True
+
             # Look ahead up to 3 lines for ND, <LOQ, <value, or NR patterns
             # (Condent LIMS puts result values on separate lines)
-            if value is None:
+            if value is None and not below_loq:
                 for j in range(1, 4):
                     if i + j < len(lines):
                         ahead_line = lines[i + j].strip()
