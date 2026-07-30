@@ -274,7 +274,7 @@ class AerolabsParser(BaseParser):
             # Extract inline numeric values from the (possibly combined) line
             if value is None and not below_loq:
                 # Skip lines that are primarily date patterns (e.g. "3/11/2026")
-                is_date_line = re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
+                is_date_line = re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
                 inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
 
                 # Filter: keep decimal numbers or multi-digit integers; skip single-digit
@@ -328,7 +328,7 @@ class AerolabsParser(BaseParser):
                         value = "ND"
                         break
                     # Skip date patterns (e.g. "3/11/2026") — they contain numeric-looking values
-                    if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
+                    if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
                         continue
                     m_num = number_re.match(candidate_line)
                     if m_num:

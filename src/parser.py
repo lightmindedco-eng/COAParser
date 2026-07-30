@@ -18,6 +18,7 @@ from src.parsers.aerolabs import AerolabsParser
 from src.parsers.baseline import BaselineParser
 from src.parsers.confident import ConfidentParser
 from src.parsers.gateway import GatewayParser
+from src.parsers.greenleaf import GreenleafParser
 from src.parsers.highres import HighresParser
 from src.parsers.metis_qa import MetisQAParser
 from src.parsers.sunrise import SunriseParser
@@ -31,6 +32,7 @@ class COAParser:
             "baseline": BaselineParser(),
             "confident": ConfidentParser(),
             "gateway": GatewayParser(),
+            "greenleaf": GreenleafParser(),
             "highres": HighresParser(),
             "metis_qa": MetisQAParser(),
             "sunrise": SunriseParser(),
@@ -243,6 +245,7 @@ _TERPENE_NAMES = {
     "alpha-bisabolol", "beta-ocimene", "d-limonene", "caryophyllene oxide",
     "alpha-terpinene", "gamma-terpinene", "p-cymene", "alpha-terpineol",
     "cis-ocimene", "trans-ocimene",
+    "farnesene", "trans-beta-farnesene", "trans-beta-farnesol",
     "total terpenes",
 }
 

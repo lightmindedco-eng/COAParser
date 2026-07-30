@@ -25,6 +25,8 @@ def detect_format(content: str) -> str:
         return "gateway"
     if "baseline" in lowered:
         return "baseline"
+    if "gl-msop" in lowered or "greenleaf" in lowered:
+        return "greenleaf"
     if "havard industries" in lowered or "condent" in lowered:
         return "confident"
     if "confident" in lowered:

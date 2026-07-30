@@ -46,3 +46,868 @@ Description:
   Clearly the Confident LIMS has been altered and is consistently mis-reporting terpene values using the wrong columns. Need to address that some instances use different layouts and Confident LIMS needs to be aware of different layouts before reading values.
 
 ==================
+=== Error Report ===
+Date:    2026-07-29 17:09:44
+Input:   Input\1A40E01000021A9000024251.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Emerald Technologies - BUD - Lilac Diesel - (g)(metis_qa)(04-28-2026).txt
+
+Description:
+  Not detecting Terpenes or Cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:10:09
+Input:   Input\1A40E01000021A9000022595.pdf
+Output:  Output\(Emerald Technologies Inc)Emerald Technologies - Flower and Buds - Mac Truck - (g)(confident)(01-12-2026).txt
+
+Description:
+  Using PPM not %
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:10:30
+Input:   Input\1A40E01000021A9000024105.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Flower & Buds - Bittersweet - (g)(metis_qa)(04-17-2026).txt
+
+Description:
+  Not detecting Terpenes or Cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:11:26
+Input:   Input\1A40E0100004B19000045322.pdf
+Output:  Output\(JKJ PROCESSING INC)JKJ PROCESSING INC Lic. # PAAA-4JJF - VKHP 4301 WILL ROGERS PKWY OKLAHOMA CITY, OK(metis_qa)(01-08-2025).txt
+
+Description:
+  Completely incorrect file. No output is correct
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:13:35
+Input:   Input\1A40E0100016B49000017130.pdf
+Output:  Output\(NXLVL LLC)918 Bermuda Pie Cake(confident)(04-06-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:13:41
+Input:   Input\1A40E0100016B49000016960.pdf
+Output:  Output\(NXLVL LLC)918 Burnt Orange(confident)(03-18-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:13:47
+Input:   Input\1A40E0100016B49000017315.pdf
+Output:  Output\(NXLVL LLC)918 Mac(confident)(05-05-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:13:54
+Input:   Input\1A40E0100016B49000017301.pdf
+Output:  Output\(NXLVL LLC)918 RE - Dick(confident)(05-04-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:14:03
+Input:   Input\1A40E01000020A7000000739.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds (Bulk) - Lemon Cherry Garlic - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:14:08
+Input:   Input\1A40E01000020A7000000743.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds (Bulk) - Masterpiece - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:14:14
+Input:   Input\1A40E01000020A7000000737.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds - Hash Burger - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene needs to be moved from Cannabinoids to Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:00
+Input:   Input\1A40E010000421F000217070.pdf
+Output:  Output\(Shico LLC)Medicine Man Black Cherry 100mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(09-18-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:18
+Input:   Input\1A40E010000421F000217334.pdf
+Output:  Output\(Shico LLC)Medicine Man Black Cherry 25mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(11-07-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:24
+Input:   Input\1A40E010000421F000224910.pdf
+Output:  Output\(Shico LLC)Medicine Man Grape 100mg THC-CBD 1-1 + 5mg CBN Fruit Chews(confident)(03-13-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:40
+Input:   Input\1A40E010000421F000217310.pdf
+Output:  Output\(Shico LLC)Medicine Man Grape 25mg THC-CBD 1-1 + 5mg CBN Fruit Chews(metis_qa)(10-24-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:47
+Input:   Input\1A40E010000421F000217222.pdf
+Output:  Output\(Shico LLC)Medicine Man Strawberry Kiwi 25mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(09-30-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:17:53
+Input:   Input\1A40E010000421F000217073.pdf
+Output:  Output\(Shico LLC)Medicine Man Watermelon 100mg THC-CBD 1-1 Fruit Chews(metis_qa)(09-18-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:18:41
+Input:   Input\1A40E010000421F000224968.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Blue Raspberry Indica 250mg THC Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:18:46
+Input:   Input\2603DML0050.0135-Shico-LLC-Smokiez-Sour-Deep-Sleep-Prickly-Pear-100mg-THC_CBD_CBN-1_1_1-Fruit-Chews-1.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Deep Sleep Prickly Pear 100mg THC-CBD-CBN 1-1-1 Fruit Chews(metis_qa)(03-12-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:18:59
+Input:   Input\1A40E010000421F000237036.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Jamberry 1000mg THC-CBN 5-1 Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:09
+Input:   Input\1A40E010000421F000237044.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Peach Sativa 1000mg THC Fruit Chews(metis_qa)(04-21-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:17
+Input:   Input\1A40E010000421F000224971.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Peach Sativa 100mg THC Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:27
+Input:   Input\1A40E010000421F000224993.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Watermelon Hybrid 250mg THC Fruit Chews(metis_qa)(04-07-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:39
+Input:   Input\1A40E010000421F000237015.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blue Raspberry Indica 1000mg THC Fruit Chews(metis_qa)(04-08-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:46
+Input:   Input\1A40E010000421F000224876.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blue Raspberry Indica 100mg THC Fruit Chews(confident)(03-09-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:50
+Input:   Input\1A40E010000421F000237009.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blue Raspberry Indica 100mg THC Fruit Chews(metis_qa)(04-08-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:19:55
+Input:   Input\1A40E010000421F000224919.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Deep Sleep Prickly Pear 100mg THC-CBD-CBN 1-1-1 Fruit Chews(metis_qa)(03-12-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:07
+Input:   Input\1A40E010000421F000237030.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Jamberry 1000mg THC-CBN 5-1 Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:12
+Input:   Input\1A40E010000421F000224996.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Jamberry 100mg THC-CBN 1-1 Fruit Chews(metis_qa)(04-07-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:17
+Input:   Input\1A40E010000421F000237021.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Peach Sativa 1000mg THC Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:21
+Input:   Input\1A40E010000421F000237101.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Peach Sativa 250mg THC Fruit Chews(metis_qa)(04-30-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:29
+Input:   Input\1A40E010000421F000224965.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Tropical 100mg THC-CBD 1-1 Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:43
+Input:   Input\1A40E010000421F000237068.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 1000mg THC Fruit Chews(metis_qa)(04-27-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:47
+Input:   Input\1A40E010000421F000224950.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 100mg THC Fruit Chews(metis_qa)(03-23-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:20:53
+Input:   Input\1A40E010000421F000237176.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 250mg THC Fruit Chews(metis_qa)(05-18-2026).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:21:00
+Input:   Input\1A40E010000421F000224529.pdf
+Output:  Output\(Shico LLC)Spinello Lemon Sativa 1000mg THC Fruit Chews(metis_qa)(11-25-2025).txt
+
+Description:
+  Needs to include mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:21:41
+Input:   Input\1A40E0100003A69000004773.pdf
+Output:  Output\(Sirius Research LLc)Flower - Black Matter - (g)(confident)(02-26-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:21:45
+Input:   Input\1A40E0100003A69000005064.pdf
+Output:  Output\(Sirius Research LLc)Flower - WHITE WEDDING - (g)(confident)(03-26-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:21:50
+Input:   Input\1A40E0100003A69000004481.pdf
+Output:  Output\(Sirius Research LLc)Qa Lot Source - Alien Vortex - FlowerLot(confident)(11-27-2025).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:21:55
+Input:   Input\1A40E0100003A69000004479.pdf
+Output:  Output\(Sirius Research LLc)Qa Lot Source - Buzz - FlowerLot(confident)(11-27-2025).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:01
+Input:   Input\1A40E01000014CA000002830.pdf
+Output:  Output\(Sooner State Wellness, LLC)Asteroid Pump Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:07
+Input:   Input\1A40E01000014CA000002826.pdf
+Output:  Output\(Sooner State Wellness, LLC)Cosmic Candy Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:13
+Input:   Input\1A40E01000014CA000002832.pdf
+Output:  Output\(Sooner State Wellness, LLC)Gas Headz Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:18
+Input:   Input\1A40E01000014CA000002828.pdf
+Output:  Output\(Sooner State Wellness, LLC)Karbon Warheadz Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:23
+Input:   Input\1A40E01000014CA000002824.pdf
+Output:  Output\(Sooner State Wellness, LLC)Nebula Candy Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:30
+Input:   Input\1A40E01000014CA000002822-1.pdf
+Output:  Output\(Sooner State Wellness, LLC)Nuclear Football Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:35
+Input:   Input\1A40E01000014CA000002816.pdf
+Output:  Output\(Sooner State Wellness, LLC)Presidential Runtz Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:22:39
+Input:   Input\1A40E01000014CA000002820.pdf
+Output:  Output\(Sooner State Wellness, LLC)Tropical Runtz Preroll(confident)(05-25-2026).txt
+
+Description:
+  Farnesene needs to be moved to Terpenes section
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:24:08
+Input:   Input\1A40E01000020EC000011781.pdf
+Output:  Output\(TPC Holdings LLC)Benevolent Bakery - Edible (Count-Weight) - Brownie Mix - Double Chocolate - 13 oz Ingestible, Baked Goods(confident)(02-24-2026).txt
+
+Description:
+  Needs to contain mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:25:28
+Input:   Input\1A40E0100015701000004199.pdf
+Output:  Output\INFUSED SLIMS - SuperGreenCrack - 0.5g(confident)(03-12-2025).txt
+
+Description:
+  Remove the input and output of this file. It is an incorrect COA file
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:40:15
+Input:   Input\1A40E01000021A9000024251.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Emerald Technologies - BUD - Lilac Diesel - (g)(metis_qa)(04-28-2026).txt
+
+Description:
+  Not detecting terpenes or cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:40:59
+Input:   Input\1A40E01000021A9000022595.pdf
+Output:  Output\(Emerald Technologies Inc)Emerald Technologies - Flower and Buds - Mac Truck - (g)(confident)(01-12-2026).txt
+
+Description:
+  Not detecting Cannabinoids properly, using PPM instead of & for Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:41:05
+Input:   Input\1A40E01000021A9000024105.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Flower & Buds - Bittersweet - (g)(metis_qa)(04-17-2026).txt
+
+Description:
+  Not detecting terpenes or cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:42:06
+Input:   Input\1A40E0100004B19000045322.pdf
+Output:  Output\(JKJ PROCESSING INC)JKJ PROCESSING INC Lic. # PAAA-4JJF - VKHP 4301 WILL ROGERS PKWY OKLAHOMA CITY, OK(metis_qa)(01-08-2025).txt
+
+Description:
+  Not detecting cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:43:33
+Input:   Input\1A40E0100016B49000017130.pdf
+Output:  Output\(NXLVL LLC)918 Bermuda Pie Cake(confident)(04-06-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:43:40
+Input:   Input\1A40E0100016B49000016960.pdf
+Output:  Output\(NXLVL LLC)918 Burnt Orange(confident)(03-18-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:43:46
+Input:   Input\1A40E0100016B49000017315.pdf
+Output:  Output\(NXLVL LLC)918 Mac(confident)(05-05-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:43:53
+Input:   Input\1A40E0100016B49000017301.pdf
+Output:  Output\(NXLVL LLC)918 RE - Dick(confident)(05-04-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:44:00
+Input:   Input\1A40E01000020A7000000739.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds (Bulk) - Lemon Cherry Garlic - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:44:09
+Input:   Input\1A40E01000020A7000000743.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds (Bulk) - Masterpiece - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:44:15
+Input:   Input\1A40E01000020A7000000737.pdf
+Output:  Output\(OCD Cultivation)Flower & Buds - Hash Burger - (g)(confident)(06-04-2026).txt
+
+Description:
+  Farnesene in Cannabinoid when expected is Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:46:58
+Input:   Input\1A40E010000421F000217070.pdf
+Output:  Output\(Shico LLC)Medicine Man Black Cherry 100mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(09-18-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:47:18
+Input:   Input\1A40E010000421F000217334.pdf
+Output:  Output\(Shico LLC)Medicine Man Black Cherry 25mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(11-07-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:47:32
+Input:   Input\1A40E010000421F000217172.pdf
+Output:  Output\(Shico LLC)Medicine Man Blueberry 25mg THC-CBD 1-1 + 5mg CBN Fruit Chews(metis_qa)(09-18-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:47:54
+Input:   Input\1A40E010000421F000217310.pdf
+Output:  Output\(Shico LLC)Medicine Man Grape 25mg THC-CBD 1-1 + 5mg CBN Fruit Chews(metis_qa)(10-24-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:48:03
+Input:   Input\1A40E010000421F000217225.pdf
+Output:  Output\(Shico LLC)Medicine Man Strawberry Kiwi 100mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(09-30-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:48:10
+Input:   Input\1A40E010000421F000217222.pdf
+Output:  Output\(Shico LLC)Medicine Man Strawberry Kiwi 25mg THC-CBD 1-1 + 5mg CBG Fruit Chews(metis_qa)(09-30-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:48:19
+Input:   Input\1A40E010000421F000217073.pdf
+Output:  Output\(Shico LLC)Medicine Man Watermelon 100mg THC-CBD 1-1 Fruit Chews(metis_qa)(09-18-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:49:22
+Input:   Input\1A40E010000421F000224968.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Blue Raspberry Indica 250mg THC Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:49:31
+Input:   Input\2603DML0050.0135-Shico-LLC-Smokiez-Sour-Deep-Sleep-Prickly-Pear-100mg-THC_CBD_CBN-1_1_1-Fruit-Chews-1.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Deep Sleep Prickly Pear 100mg THC-CBD-CBN 1-1-1 Fruit Chews(metis_qa)(03-12-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:50:07
+Input:   Input\1A40E010000421F000237036.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Jamberry 1000mg THC-CBN 5-1 Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:50:32
+Input:   Input\1A40E010000421F000237044.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Peach Sativa 1000mg THC Fruit Chews(metis_qa)(04-21-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:50:45
+Input:   Input\1A40E010000421F000224971.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Peach Sativa 100mg THC Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:09
+Input:   Input\1A40E010000421F000224993.pdf
+Output:  Output\(Shico LLC)Smokiez Sour Watermelon Hybrid 250mg THC Fruit Chews(metis_qa)(04-07-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:21
+Input:   Input\1A40E010000421F000237018.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blackberry Indica 100mg THC Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:29
+Input:   Input\1A40E010000421F000237015.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blue Raspberry Indica 1000mg THC Fruit Chews(metis_qa)(04-08-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:41
+Input:   Input\1A40E010000421F000237009.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Blue Raspberry Indica 100mg THC Fruit Chews(metis_qa)(04-08-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:46
+Input:   Input\1A40E010000421F000224919.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Deep Sleep Prickly Pear 100mg THC-CBD-CBN 1-1-1 Fruit Chews(metis_qa)(03-12-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:51:59
+Input:   Input\1A40E010000421F000237030.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Jamberry 1000mg THC-CBN 5-1 Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:09
+Input:   Input\1A40E010000421F000224996.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Jamberry 100mg THC-CBN 1-1 Fruit Chews(metis_qa)(04-07-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:17
+Input:   Input\1A40E010000421F000237021.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Peach Sativa 1000mg THC Fruit Chews(metis_qa)(04-13-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:26
+Input:   Input\1A40E010000421F000237101.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Peach Sativa 250mg THC Fruit Chews(metis_qa)(04-30-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:37
+Input:   Input\1A40E010000421F000224965.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Tropical 100mg THC-CBD 1-1 Fruit Chews(metis_qa)(03-30-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:48
+Input:   Input\1A40E010000421F000237068.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 1000mg THC Fruit Chews(metis_qa)(04-27-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:52:54
+Input:   Input\1A40E010000421F000224950.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 100mg THC Fruit Chews(metis_qa)(03-23-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:53:03
+Input:   Input\1A40E010000421F000237176.pdf
+Output:  Output\(Shico LLC)Smokiez Sweet Watermelon Hybrid 250mg THC Fruit Chews(metis_qa)(05-18-2026).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:53:22
+Input:   Input\1A40E010000421F000224529.pdf
+Output:  Output\(Shico LLC)Spinello Lemon Sativa 1000mg THC Fruit Chews(metis_qa)(11-25-2025).txt
+
+Description:
+  Incorrect Cannabinoids mg/g being used instead of mg/unit
+
+==================
+=== Error Report ===
+Date:    2026-07-29 17:55:22
+Input:   Input\1A40E01000177D6000000800.pdf
+Output:  Output\(Sunshine Unlimited)Sunshine - FSO Live Resin Disposable - Pink Pacasso -(confident)(02-13-2025).txt
+
+Description:
+  Caryophyllene Oxide  providing random 12% result
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:13:50
+Input:   Input\1A40E01000021A9000024251.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Emerald Technologies - BUD - Lilac Diesel - (g)(metis_qa)(04-28-2026).txt
+
+Description:
+  *Priority* Is not extracting cannabinoids or terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:14:17
+Input:   Input\1A40E01000021A9000022595.pdf
+Output:  Output\(Emerald Technologies Inc)Emerald Technologies - Flower and Buds - Mac Truck - (g)(confident)(01-12-2026).txt
+
+Description:
+  *Priority* Is not extracting cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:14:24
+Input:   Input\1A40E01000021A9000024105.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Flower & Buds - Bittersweet - (g)(metis_qa)(04-17-2026).txt
+
+Description:
+  *Priority* Is not extracting cannabinoids or terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:14:44
+Input:   Input\1A40E01000021A9000024440.pdf
+Output:  Output\(Emerald Technologies Inc)Flower & Buds - Primetime - (g)(confident)(05-19-2026).txt
+
+Description:
+  *Priority* Is not extracting cannabinoids
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:16:20
+Input:   Input\1A40E0100004B19000045322.pdf
+Output:  Output\(JKJ PROCESSING INC)JKJ PROCESSING INC Lic. # PAAA-4JJF - VKHP 4301 WILL ROGERS PKWY OKLAHOMA CITY, OK(metis_qa)(01-08-2025).txt
+
+Description:
+  Name of Product incorrect, expected "WL Green Apple 100mg - Individual"
+  Needs to show mg/g as an edible product
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:19:12
+Input:   Input\0000333535.pdf
+Output:  Output\(MMK FARMING)Grape Bubblegum(gateway)(12-11-2025).txt
+
+Description:
+  I have no clue where the terpene values are being pulled here but they are all consistenly wrong. The % column contains the proper terpene percentages
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:42:17
+Input:   Input\1A40E01000021A9000024251.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Emerald Technologies - BUD - Lilac Diesel - (g)(metis_qa)(04-28-2026).txt
+
+Description:
+  Not parsing Cannabinoids or Terpenes
+
+==================
+=== Error Report ===
+Date:    2026-07-29 18:42:32
+Input:   Input\1A40E01000021A9000024105.pdf
+Output:  Output\(EMERALD TECHNOLOGIES INC)Flower & Buds - Bittersweet - (g)(metis_qa)(04-17-2026).txt
+
+Description:
+  Not parsing Cannabinoids or Terpenes
+
+==================

@@ -148,7 +148,7 @@ class HighresParser(BaseParser):
                 continue
 
             # Skip standalone numeric lines and date lines
-            if re.match(r"^[\d.]+$", raw_line) or re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", raw_line):
+            if re.match(r"^[\d.]+$", raw_line) or re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", raw_line):
                 i += 1
                 continue
 
@@ -186,7 +186,7 @@ class HighresParser(BaseParser):
                     if re.match(r"^<(?:LOQ|[\d.]+)", candidate_line, re.IGNORECASE):
                         below_loq = True
                         break
-                    if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
+                    if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
                         continue
                     m_num = number_re.match(candidate_line)
                     if m_num:

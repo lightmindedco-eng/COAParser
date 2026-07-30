@@ -67,7 +67,6 @@ class GatewayParser(BaseParser):
         )
 
         # Pass 1a - "Total X: Y %" on a single line
-        total_terpenes_value: float | None = None
         for line in lines:
             m = total_re.search(line)
             if m:
@@ -77,11 +76,6 @@ class GatewayParser(BaseParser):
                 if key not in seen:
                     seen.add(key)
                     results.append(f"{label}: {value}%")
-                    if key == "total terpenes":
-                        try:
-                            total_terpenes_value = float(value)
-                        except ValueError:
-                            logger.debug("Could not parse total terpenes value: %s", value)
 
         # Pass 1b - "Total X" on one line, numeric value on the next line
         _valid_totals = {
@@ -108,11 +102,6 @@ class GatewayParser(BaseParser):
                     elif m_val:
                         seen.add(key)
                         results.append(f"{label}: {m_val.group(1)}%")
-                        if key == "total terpenes" and total_terpenes_value is None:
-                            try:
-                                total_terpenes_value = float(m_val.group(1))
-                            except ValueError:
-                                logger.debug("Could not parse total terpenes m_val: %s", m_val.group(1))
 
         # Detect if cannabinoid section uses mg/unit with no direct % column
         # e.g., "Cannabinoids by LC-DAD" with mg/unit header and totals in mg/unit
@@ -134,7 +123,6 @@ class GatewayParser(BaseParser):
         # Pass 2 - individual compound rows
         in_terpene_section = False
         terpene_result_index = 3  # default: 3rd numeric = Result %
-        is_v2_terpene_format = False  # v2 = CAS# detected, values are relative
         terpene_items: list[tuple[str, float]] = []  # collected for post-conversion
         cannabinoid_mg_unit_items: list[tuple[str, float]] = []  # mg/unit values for % calc
 
@@ -147,11 +135,9 @@ class GatewayParser(BaseParser):
                 if not in_terpene_section:
                     in_terpene_section = True
                     terpene_result_index = 3  # default v1: LOD, LOQ, Result%, mg/g
-                    is_v2_terpene_format = False
                     for j in range(1, min(11, len(lines) - i)):
                         if "cas#" in lines[i + j].lower():
-                            terpene_result_index = 2  # v2: mg/g, Result%, CAS#...
-                            is_v2_terpene_format = True
+                            terpene_result_index = 1  # v2: mg/g=actual %, %=mg/g*10
                             break
             elif re.search(r"cannabinoid", line_lower) and not re.search(r"^total\s", line_lower):
                 in_terpene_section = False
@@ -189,23 +175,29 @@ class GatewayParser(BaseParser):
                 target_numeric = 1  # mg/unit is 1st numeric
             else:
                 target_numeric = 3
-            numeric_count = 0
+            position = 0
             for candidate_line in ahead:
+                if candidate_line.startswith("<"):
+                    position += 1
+                    if position == target_numeric:
+                        value = "ND"
+                        break
+                    continue
+
                 m_num = number_re.match(candidate_line)
                 if m_num:
-                    numeric_count += 1
-                    if numeric_count == target_numeric:
+                    position += 1
+                    if position == target_numeric:
                         value = f"{m_num.group(1)}%"
                         break
+                    continue
 
-                if nd_re.match(candidate_line) and numeric_count >= target_numeric - 1:
-                    value = "ND"
-                    break
-
-                # v1 format: skip <LOQ / <value lines (below threshold)
-                if candidate_line.startswith("<") and numeric_count >= target_numeric - 1:
-                    value = "ND"
-                    break
+                if nd_re.match(candidate_line):
+                    position += 1
+                    if position == target_numeric:
+                        value = "ND"
+                        break
+                    continue
 
             seen.add(matched.lower())
             if value == "ND":
@@ -229,22 +221,10 @@ class GatewayParser(BaseParser):
             else:
                 results.append(matched)
 
-        # Post-process terpenes:
-        # Gateway v2: "Result %" is relative composition (% of total terpenes).
-        #   Convert: absolute_% = (relative_% / 100) * total_terpenes_%
-        # Gateway v1: "Result %" is already absolute % of sample. No conversion.
-        if terpene_items and is_v2_terpene_format and total_terpenes_value is not None and total_terpenes_value > 0:
-            # v2: convert relative to absolute
-            conversion_factor = total_terpenes_value / 100.0
-            for name, rel_pct in terpene_items:
-                abs_pct = rel_pct * conversion_factor
-                if abs_pct >= 0.001:
-                    results.append(f"{name}: {abs_pct:.4g}%")
-        else:
-            # v1 or no Total Terpenes: values are already absolute
-            for name, val in terpene_items:
-                if val >= 0.001:
-                    results.append(f"{name}: {val}%")
+        # Post-process terpenes: output % column values verbatim
+        for name, val in terpene_items:
+            if val >= 0.001:
+                results.append(f"{name}: {val:.4g}%")
 
         # Convert mg/unit cannabinoid values to percentages (preserve mg for display)
         if cannabinoid_uses_mg_unit and total_cannabinoids_mg_unit and total_cannabinoids_mg_unit > 0:

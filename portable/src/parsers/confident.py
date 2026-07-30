@@ -132,6 +132,7 @@ class ConfidentParser(BaseParser):
         mg_unit_items: list[tuple[str, float]] = []
         _section_type = None
         _first_section_entered = False
+        _ppm_mode = False
 
         i = 0
         while i < len(lines):
@@ -145,6 +146,7 @@ class ConfidentParser(BaseParser):
                 _section_type = "terpenes" if is_terpene else "cannabinoids"
                 result_index = 2
                 mg_unit_mode = False
+                _ppm_mode = False
                 # On the very first data-section entry, clear seen and trim results
                 # to only totals (removes false positives from product-name lines).
                 # Do NOT repeat this on subsequent section entries or transitions
@@ -157,7 +159,7 @@ class ConfidentParser(BaseParser):
                     # Section-to-section transition: only reset seen; keep results
                     seen.clear()
                 found_ppm = False
-                reporting_limit_mode = False
+                _saw_pct_header = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower):
@@ -168,6 +170,8 @@ class ConfidentParser(BaseParser):
                         pass
                     if "mg/unit" in ahead_lower and "%" not in ahead_lower:
                         mg_unit_mode = True
+                    if "%" in ahead_lower or re.search(r"\bmass\b", ahead_lower):
+                        _saw_pct_header = True
                     if is_terpene and "ppm" in ahead_lower:
                         found_ppm = True
                     if re.match(r"^result\s*\(%\)", ahead_lower):
@@ -179,9 +183,12 @@ class ConfidentParser(BaseParser):
                         break
                     if (self._match_compound(ahead_lower) or re.search(r"^(cannabinoid|terpene)", ahead_lower)) and not re.search(r"^total", ahead_lower):
                         break
-                # If we only found "Reporting Limit" (no LOQ/LOD), keep result_index=2 for Mass%
-                if reporting_limit_mode and result_index == 2:
-                    result_index = 2
+                # PPM mode: terpene section has "ppm" in header but no "%" or "mass" column
+                if _saw_pct_header and found_ppm and result_index == 1:
+                    # "Result (%)" was found first, then LOQ; Mass% is at index 1
+                    pass
+                if is_terpene and found_ppm and not _saw_pct_header:
+                    _ppm_mode = True
 
             # Detect end of cannabinoid/terpene data sections: when a different
             # test section starts (pesticides, solvents, etc.), stop matching.
@@ -264,14 +271,15 @@ class ConfidentParser(BaseParser):
                             break
 
             if value is None and not below_loq:
-                is_date_line = re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
+                is_date_line = re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
                 inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
 
                 result_values: list[str] = []
+                _inline_max = 99999.99 if (_ppm_mode or _section_type == "terpenes") else 999.99
                 for num_str in inline_matches:
                     num = float(num_str)
                     if "." in num_str or int(num) >= 10:
-                        if num <= 999.99:
+                        if num <= _inline_max:
                             if not re.search(rf"<\s*{re.escape(num_str)}", raw_line):
                                 result_values.append(num_str)
 
@@ -316,8 +324,11 @@ class ConfidentParser(BaseParser):
                         value = "ND"
                         got_value = True
                         break
-                    if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
+                    if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
                         continue
+                    # Stop at Total lines — they mark end of section data
+                    if re.match(r"^total\b", candidate_line.strip(), re.IGNORECASE):
+                        break
                     # Stop at next compound name (different from current)
                     candidate_normalized = self._normalize_name(candidate_line)
                     candidate_lower = candidate_normalized.lower()
@@ -334,7 +345,7 @@ class ConfidentParser(BaseParser):
                         inline_nums = inline_values_re.findall(candidate_line)
                         for num_str in inline_nums:
                             num = float(num_str)
-                            max_val = 99999.99 if mg_unit_mode else 999.99
+                            max_val = 99999.99 if (mg_unit_mode or _ppm_mode or _section_type == "terpenes") else 999.99
                             if "." in num_str or int(num) >= 10:
                                 if num <= max_val:
                                     numeric_count += 1
@@ -349,6 +360,14 @@ class ConfidentParser(BaseParser):
             if value == "ND" or below_loq:
                 pass
             elif value:
+                # Value-based PPM conversion: if terpene value > 100%, it's likely ppm
+                if _section_type == "terpenes" and value.endswith("%"):
+                    try:
+                        v = float(value.rstrip("%"))
+                        if v > 100:
+                            value = f"{v / 10000:.4f}%"
+                    except ValueError:
+                        pass
                 if mg_unit_mode:
                     try:
                         mg_val = float(value.rstrip("%"))
@@ -361,6 +380,17 @@ class ConfidentParser(BaseParser):
                 results.append(matched)
 
             i += 1
+
+        # Value-based PPM conversion for terpene totals (>100% is ppm)
+        for idx, item in enumerate(results):
+            m_ppm = re.match(r"^(Total\s+(?:[Tt]erpenes|[Tt]erpenoids?)):\s*([\d.eE+\-]+)%$", item)
+            if m_ppm:
+                try:
+                    val = float(m_ppm.group(2))
+                    if val > 100:
+                        results[idx] = f"{m_ppm.group(1)}: {val / 10000:.4f}%"
+                except ValueError:
+                    pass
 
         # Post-filter: remove compounds with percentage values below 0.01%
         filtered: list[str] = []

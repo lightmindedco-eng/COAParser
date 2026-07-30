@@ -25,7 +25,7 @@ def _strip_name(name: str) -> str:
 
 
 class _BarRow(QWidget):
-    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False, mg: float | None = None) -> None:
+    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False, mg: float | None = None, unit: str = "") -> None:
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 1, 0, 1)
@@ -56,15 +56,15 @@ class _BarRow(QWidget):
             filler = QWidget()
             filler.setStyleSheet("background-color: transparent;")
             track_layout.addWidget(filler)
-            bar_stretch = max(1, int(pct_of_max * 1000))
-            filler_stretch = max(0, 1000 - bar_stretch)
+            bar_stretch = max(1, int(pct_of_max * 700))
+            filler_stretch = max(300, 1000 - bar_stretch)
             track_layout.setStretchFactor(bar, bar_stretch)
             track_layout.setStretchFactor(filler, filler_stretch)
 
         layout.addWidget(track, stretch=1)
 
         if mg is not None:
-            val_label = QLabel(f"{value:.3f}%  ({mg:.3f} mg/unit)")
+            val_label = QLabel(f"{value:.3f}%  ({mg:.3f} {unit})")
         else:
             val_label = QLabel(f"{value:.3f}%")
         val_label.setStyleSheet("font-size: 12px;")
@@ -74,7 +74,7 @@ class _BarRow(QWidget):
 
 
 class _Section(QWidget):
-    def __init__(self, title: str, items: list[tuple[str, float, str, float | None]], total_name: str | None = None) -> None:
+    def __init__(self, title: str, items: list[tuple[str, float, str, float | None, str | None]], total_name: str | None = None) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -95,12 +95,12 @@ class _Section(QWidget):
             layout.addWidget(empty)
             return
 
-        max_val = max(v for _, v, _, _ in items)
-        for name, val, compound_type, mg in items:
+        max_val = max(v for _, v, _, _, _ in items)
+        for name, val, compound_type, mg, unit in items:
             is_total = name.lower().startswith("total ")
             is_terp = compound_type == "terpene"
             color = _get_color(name, is_terp)
-            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total, mg=mg)
+            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total, mg=mg, unit=unit or "")
             layout.addWidget(bar)
 
 
@@ -152,15 +152,16 @@ def _get_color(name: str, is_terpene: bool) -> str:
     return _CANNABIS_COLORS[idx]
 
 
-def _parse_items(text: str) -> list[tuple[str, float, str, float | None]]:
+def _parse_items(text: str) -> list[tuple[str, float, str, float | None, str | None]]:
     result = []
     for line in text.split("\n"):
         line = line.strip()
-        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*(?:\(([\d.]+)\s*mg/unit\))?\s*$", line)
+        m = re.match(r"^\s*(.+?)\s*:\s*([\d.]+)%\s*(?:\(([\d.]+)\s*(mg/g|mg/unit)\))?\s*$", line)
         if m:
             name = m.group(1).strip()
             val = float(m.group(2))
             mg = float(m.group(3)) if m.group(3) else None
+            unit = m.group(4) if m.group(4) else None
             stripped = _strip_name(name).lower()
             stripped = re.sub(r'\ba-(?=[A-Za-z])', 'alpha-', stripped)
             stripped = re.sub(r'\bb-(?=[A-Za-z])', 'beta-', stripped)
@@ -176,9 +177,10 @@ def _parse_items(text: str) -> list[tuple[str, float, str, float | None]]:
                 "alpha-bisabolol", "beta-ocimene", "d-limonene", "caryophyllene oxide",
                 "alpha-terpinene", "gamma-terpinene", "p-cymene", "alpha-terpineol",
                 "cis-ocimene", "trans-ocimene", "total terpenes",
+                "farnesene", "trans-beta-farnesene", "trans-beta-farnesol",
             }
             compound_type = "terpene" if is_terp else "cannabinoid"
-            result.append((name, val, compound_type, mg))
+            result.append((name, val, compound_type, mg, unit))
     return result
 
 
@@ -237,18 +239,18 @@ class VisualOutputWidget(QScrollArea):
         self._layout.addWidget(info_widget)
 
         def sort_key(item: tuple) -> tuple:
-            n, v, _, _ = item
+            n, v, _, _, _ = item
             is_total = n.lower().startswith("total ")
             return (0 if is_total else 1, -v)
 
-        def parse_items_to_tuples(raw: list[str]) -> list[tuple[str, float, str, float | None]]:
+        def parse_items_to_tuples(raw: list[str]) -> list[tuple[str, float, str, float | None, str | None]]:
             text = "\n".join(raw)
             return _parse_items(text)
 
         # Section 1: blend — from result.items (raw text-extracted items)
         blend_parsed = parse_items_to_tuples(result.items)
-        blend_canna = [(n, v, t, mg) for n, v, t, mg in blend_parsed if t != "terpene"]
-        blend_terps = [(n, v, t, mg) for n, v, t, mg in blend_parsed if t == "terpene"]
+        blend_canna = [(n, v, t, mg, u) for n, v, t, mg, u in blend_parsed if t != "terpene"]
+        blend_terps = [(n, v, t, mg, u) for n, v, t, mg, u in blend_parsed if t == "terpene"]
         blend_canna.sort(key=sort_key)
         blend_terps.sort(key=sort_key)
         self._layout.addWidget(_Section("CANNABINOIDS", blend_canna))
@@ -263,8 +265,8 @@ class VisualOutputWidget(QScrollArea):
             self._layout.addWidget(sep)
 
             strain_parsed = parse_items_to_tuples(strain_items)
-            s_canna = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t != "terpene"]
-            s_terps = [(n, v, t, mg) for n, v, t, mg in strain_parsed if t == "terpene"]
+            s_canna = [(n, v, t, mg, u) for n, v, t, mg, u in strain_parsed if t != "terpene"]
+            s_terps = [(n, v, t, mg, u) for n, v, t, mg, u in strain_parsed if t == "terpene"]
             s_canna.sort(key=sort_key)
             s_terps.sort(key=sort_key)
 

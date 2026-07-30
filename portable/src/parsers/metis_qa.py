@@ -53,6 +53,13 @@ class MetisQAParser(BaseParser):
         seen: set[str] = set()
         edible_mode = False
 
+        # Pre-scan for edible indicators: "mg/unit" in column headers or "= Xg" product info
+        for line in lines:
+            lowered = line.lower()
+            if "mg/unit" in lowered:
+                edible_mode = True
+                break
+
         # Pass 1 – standalone "Total:" summary lines
         for i, line in enumerate(lines):
             m = total_re.search(line)
@@ -87,6 +94,19 @@ class MetisQAParser(BaseParser):
                     if m_val:
                         seen.add(key)
                         results.append(f"Total {label}: {m_val.group(1)}%")
+            # Value-before-label: "X mg/unit" followed by "Total Y"
+            if i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                m_next_total = re.match(r"^Total\s+(.+)$", next_line, re.IGNORECASE)
+                if m_next_total:
+                    m_pre_val = re.match(r"^([\d.]+)\s*mg/unit", stripped, re.IGNORECASE)
+                    if m_pre_val:
+                        label = m_next_total.group(1).strip()
+                        key = f"total {label.lower()}"
+                        if key not in seen:
+                            seen.add(key)
+                            results.append(f"Total {label}: {m_pre_val.group(1)} mg/unit")
+
             # "Total" on its own line (value before on same line as "Total")
             if stripped.lower() == "total" and i + 2 < len(lines):
                 if _section_for_total == "terpenes":
@@ -103,7 +123,8 @@ class MetisQAParser(BaseParser):
                     if _section_for_total == "terpenes":
                         results.append(f"Total Terpenes: {val2}%")
                     else:
-                        results.append(f"Total Cannabinoids: {m1.group(1)}%")
+                        suffix = " mg/unit" if edible_mode else "%"
+                        results.append(f"Total Cannabinoids: {m1.group(1)}{suffix}")
 
         # Pass 2 – individual compound rows
         section = None  # "cannabinoids" or "terpenes"
@@ -117,12 +138,15 @@ class MetisQAParser(BaseParser):
             # Detect section headers
             if re.search(r"^cannabinoid", line_lower) and "complete" not in line_lower:
                 section = "cannabinoids"
-                result_index = 2  # LOQ, Result%, mg/g → 2nd numeric
+                # Edible layout: LOQ, mg/unit, % → % at index 3
+                # Standard layout: LOQ, %, mg/g → % at index 2
+                result_index = 3 if edible_mode else 2
                 i += 1
                 continue
             if re.search(r"^terpene", line_lower) and "complete" not in line_lower:
                 section = "terpenes"
-                result_index = 3  # LOQ, mg/g, % → 3rd numeric
+                # Both layouts: LOQ, mg/g (or mg/unit), % → % at index 3
+                result_index = 3
                 i += 1
                 continue
 
@@ -135,6 +159,10 @@ class MetisQAParser(BaseParser):
             # Detect edible mode (e.g., "1 Unit = 3.27g")
             if "unit" in line_lower and "=" in raw_line and "g" in raw_line:
                 edible_mode = True
+                i += 1
+                continue
+
+            if section is None:
                 i += 1
                 continue
 
@@ -164,6 +192,9 @@ class MetisQAParser(BaseParser):
                                 raw_line = combined
                                 line_lower = combined_normalized.lower()
                                 i += 1
+
+            if matched and len(raw_line) > len(matched) * 2:
+                matched = None
 
             if matched is None or matched.lower() in seen:
                 i += 1
@@ -197,7 +228,7 @@ class MetisQAParser(BaseParser):
 
             # Extract inline values from current line (Metis QA puts LOQ/Result/mg/g on separate lines)
             if value is None and not below_loq:
-                is_date_line = re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
+                is_date_line = re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
                 inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
                 result_values: list[str] = []
                 for num_str in inline_matches:
@@ -223,7 +254,7 @@ class MetisQAParser(BaseParser):
                     if re.match(r"^NR$", candidate_line, re.IGNORECASE):
                         value = "ND"
                         break
-                    if re.match(r"^\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
+                    if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", candidate_line):
                         continue
                     m_num = number_re.match(candidate_line)
                     if m_num:
@@ -244,19 +275,29 @@ class MetisQAParser(BaseParser):
                     if value:
                         break
 
-            # Extract % and mg/g from collected numeric values
+            # Extract % and mg/g (or mg/unit) from collected numeric values
             if value is None and not below_loq and numeric_values:
+                unit_label = "mg/unit" if edible_mode else "mg/g"
                 if len(numeric_values) >= result_index:
                     pct = numeric_values[result_index - 1]
-                    if section == "cannabinoids" and len(numeric_values) >= result_index + 1:
-                        mg_val = numeric_values[result_index]
-                        if float(mg_val) < 99999:
-                            value = f"{pct}% ({mg_val} mg/g)"
-                        else:
-                            value = f"{pct}%"
-                    elif section == "terpenes" and len(numeric_values) >= 3:
-                        mg_val = numeric_values[1]
-                        value = f"{pct}% ({mg_val} mg/g)"
+                    mg_val = None
+                    if edible_mode:
+                        # Edible layout: LOQ, mg/unit, mg/g — no % column
+                        if len(numeric_values) >= 2:
+                            mg_val = numeric_values[1]
+                    elif section == "cannabinoids":
+                        # Standard layout: LOQ, %, mg/g → mg/g at index result_index (= 2)
+                        if len(numeric_values) >= result_index + 1:
+                            mg_val = numeric_values[result_index]
+                    else:  # terpenes
+                        # Standard layout: LOQ, mg/g, % → mg/g at index 1
+                        if len(numeric_values) >= 2:
+                            mg_val = numeric_values[1]
+                    if edible_mode:
+                        if mg_val is not None and float(mg_val) < 99999:
+                            value = f"{mg_val} {unit_label}"
+                    elif mg_val is not None and float(mg_val) < 99999:
+                        value = f"{pct}% ({mg_val} {unit_label})"
                     else:
                         value = f"{pct}%"
 
