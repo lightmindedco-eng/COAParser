@@ -195,10 +195,29 @@ class ConfidentParser(BaseParser):
             # Clear section type and seen, but DO NOT touch results – the
             # compounds already extracted from this section are valid.
             if _section_type and re.search(r"^(pesticide|residual\s+solvent|microbial|mycotoxin|heavy\s+metal|moisture|water\s+activity|foreign\s+matter|amendment)", line_lower):
-                _section_type = None
-                seen.clear()
-                i += 1
-                continue
+                # Moisture/Water-Activity can appear as summary rows WITHIN a
+                # cannabinoid section, not only as section boundaries.  Peek
+                # ahead; if a compound table (Analyte + LOQ) follows, keep
+                # the section active so the table rows get extracted.
+                if line_lower.startswith("moisture") or line_lower.startswith("water activity"):
+                    for peek in range(1, 8):
+                        if i + peek >= len(lines):
+                            break
+                        peek_line = lines[i + peek].strip().lower()
+                        if "analyte" in peek_line:
+                            break
+                        if self._match_compound(peek_line) and not re.search(r"^total\s", peek_line):
+                            break
+                    else:
+                        _section_type = None
+                        seen.clear()
+                        i += 1
+                        continue
+                else:
+                    _section_type = None
+                    seen.clear()
+                    i += 1
+                    continue
 
             if (
                 not line_lower

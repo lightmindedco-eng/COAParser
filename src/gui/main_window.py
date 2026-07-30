@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 from src.gui.error_report import ErrorReportDialog
 from src.gui.visual_output import VisualOutputWidget
 from src.parser import COAParser
-from src.core.batch import BatchProcessor
+
 
 INPUT_DIR = Path("Input")
 _OUTPUT_ROLE = Qt.UserRole + 1
@@ -51,25 +51,6 @@ SORT_ALPHA_ASC = 0
 SORT_ALPHA_DESC = 1
 SORT_TEST_DATE = 2
 SORT_FILE_DATE = 3
-
-
-class _BatchWorker(QObject):
-    progress = Signal(int, int, str)
-    finished = Signal(list)
-
-    def __init__(self, input_dir: Path, output_dir: Path) -> None:
-        super().__init__()
-        self._input_dir = input_dir
-        self._output_dir = output_dir
-
-    def run(self) -> None:
-        processor = BatchProcessor(
-            self._input_dir,
-            self._output_dir,
-            progress_callback=lambda cur, tot, name: self.progress.emit(cur, tot, name),
-        )
-        processor.process_batch()
-        self.finished.emit(processor.summary_lines())
 
 
 class _PreloadWorker(QObject):
@@ -168,7 +149,6 @@ class MainWindow(QMainWindow):
 
         self.parser = COAParser()
         self.selected_file: str | None = None
-        self._batch_thread: QThread | None = None
         self._preload_thread: QThread | None = None
         self._pdf_document = QPdfDocument(self)
         self._sort_mode = SORT_ALPHA_ASC
@@ -183,7 +163,7 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 22px; font-weight: 600;")
         main_layout.addWidget(title)
 
-        self.label = QLabel("Select a file from the list on the left, or drag & drop a COA file.")
+        self.label = QLabel("Select a folder from the list on the left, or drag & drop a COA file.")
         self.label.setWordWrap(True)
         self.label.setStyleSheet("font-size: 12px; color: #444;")
         main_layout.addWidget(self.label)
@@ -191,15 +171,10 @@ class MainWindow(QMainWindow):
         button_row = QHBoxLayout()
         button_row.setSpacing(12)
 
-        select_button = QPushButton("Select File...")
+        select_button = QPushButton("Select Folder...")
         select_button.setStyleSheet("padding: 6px; font-size: 13px;")
-        select_button.clicked.connect(self.select_file)
+        select_button.clicked.connect(self.select_folder)
         button_row.addWidget(select_button)
-
-        self.batch_button = QPushButton("Batch Process All...")
-        self.batch_button.setStyleSheet("padding: 6px; font-size: 13px;")
-        self.batch_button.clicked.connect(self.select_batch_folder)
-        button_row.addWidget(self.batch_button)
 
         main_layout.addLayout(button_row)
 
@@ -432,7 +407,8 @@ class MainWindow(QMainWindow):
         self._sort_and_rebuild()
         self._apply_filters()
         if not self.selected_file:
-            self.label.setText("Ready. Select a file from the list on the left.")
+            folder_name = INPUT_DIR.resolve().name
+            self.label.setText(f"Input folder: {folder_name}. Select a file from the list on the left.")
 
     def _populate_category_combo(self) -> None:
         cats = set()
@@ -699,78 +675,24 @@ class MainWindow(QMainWindow):
                 self._parse_and_display()
 
     # ------------------------------------------------------------------
-    # Select file button
+    # Select folder
     # ------------------------------------------------------------------
 
-    def select_file(self) -> None:
-        file_name, _ = QFileDialog.getOpenFileName(
-            self, "Select COA File", filter="PDF Files (*.pdf)"
-        )
-        if file_name:
-            self.selected_file = file_name
-            self.label.setText(f"Selected: {Path(file_name).name}")
-            self._parse_and_display()
-
-    # ------------------------------------------------------------------
-    # Batch processing
-    # ------------------------------------------------------------------
-
-    def select_batch_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Select Folder Containing PDFs")
+    def select_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(self, "Select Input Folder")
         if not folder:
-            folder = str(INPUT_DIR)
-        input_dir = Path(folder)
-        pdf_count = len(list(input_dir.glob("*.pdf")))
-        if pdf_count == 0:
-            QMessageBox.information(self, "No PDFs found", f"No PDF files found in:\n{folder}")
             return
-        self._run_batch(input_dir, pdf_count)
-
-    def _run_batch(self, input_dir: Path, pdf_count: int) -> None:
-        output_dir = Path("Output")
-
-        self.output_text_view.setPlainText("")
-        self.output_text_view.appendPlainText(f"Starting batch: {pdf_count} PDF(s) from {input_dir.name}/")
-        self.output_tabs.setCurrentIndex(1)
-        self.progress_bar.setMaximum(pdf_count)
+        global INPUT_DIR
+        INPUT_DIR = Path(folder)
+        self.progress_bar.setMaximum(0)
         self.progress_bar.setValue(0)
+        self.progress_bar.setFormat("Loading folder...")
         self.progress_bar.setVisible(True)
-        self.batch_button.setEnabled(False)
-        self.label.setText(f"Processing {pdf_count} file(s)...")
-
-        self._batch_worker = _BatchWorker(input_dir, output_dir)
-        self._batch_thread = QThread(self)
-        self._batch_worker.moveToThread(self._batch_thread)
-
-        self._batch_thread.started.connect(self._batch_worker.run)
-        self._batch_worker.progress.connect(self._on_batch_progress)
-        self._batch_worker.finished.connect(self._on_batch_finished)
-        self._batch_worker.finished.connect(self._batch_thread.quit)
-        self._batch_worker.finished.connect(self._batch_worker.deleteLater)
-        self._batch_thread.finished.connect(self._batch_thread.deleteLater)
-
-        self._batch_thread.start()
-
-    def _on_batch_progress(self, current: int, total: int, filename: str) -> None:
-        self.progress_bar.setValue(current)
-        self.progress_bar.setFormat(f"{current}/{total}  {filename}")
-        self.output_text_view.appendPlainText(f"[{current}/{total}] {filename}")
-        self.output_text_view.verticalScrollBar().setValue(
-            self.output_text_view.verticalScrollBar().maximum()
-        )
-
-    def _on_batch_finished(self, summary_lines: list) -> None:
-        self.progress_bar.setVisible(False)
-        self.batch_button.setEnabled(True)
-        self.output_text_view.appendPlainText("")
-        for line in summary_lines:
-            self.output_text_view.appendPlainText(line)
-        self.label.setText("Batch complete. Summary saved to Output/batch_summary.json")
-        # Don't clear the list — just re-preload to update names
-        self._start_preload()
+        self.label.setText("Loading folder...")
+        self._handle_duplicates()
+        self._refresh_file_list()
         if self.file_list.count() > 0:
             self.file_list.setCurrentRow(0)
-
 
 def _open_file_location(path: str) -> None:
     path_obj = Path(path)

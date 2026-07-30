@@ -187,7 +187,8 @@ class MetisQAParser(BaseParser):
                                 i += 1
                         elif matched is None and (inline_values_re.search(next_line) or self._match_compound(combined_normalized)):
                             combined_match = self._match_compound(combined_normalized)
-                            if combined_match:
+                            next_match = self._match_compound(next_normalized.lower())
+                            if combined_match and combined_match != next_match:
                                 matched = combined_match
                                 raw_line = combined
                                 line_lower = combined_normalized.lower()
@@ -295,7 +296,11 @@ class MetisQAParser(BaseParser):
                             mg_val = numeric_values[1]
                     if edible_mode:
                         if mg_val is not None and float(mg_val) < 99999:
-                            value = f"{mg_val} {unit_label}"
+                            mg_g = numeric_values[result_index - 1] if len(numeric_values) >= result_index else None
+                            if mg_g is not None and float(mg_g) < 99999:
+                                value = f"{mg_val} {unit_label} ({mg_g} mg/g)"
+                            else:
+                                value = f"{mg_val} {unit_label}"
                     elif mg_val is not None and float(mg_val) < 99999:
                         value = f"{pct}% ({mg_val} {unit_label})"
                     else:
