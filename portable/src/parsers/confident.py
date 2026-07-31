@@ -64,7 +64,7 @@ class ConfidentParser(BaseParser):
 
         # Pass 1b – Value-label or label-value patterns on adjacent lines
         pct_re = re.compile(r"^(\d+\.?\d*)\s*%$")
-        mg_unit_re = re.compile(r"^(\d+\.?\d*)\s*mg/unit$", re.IGNORECASE)
+        mg_unit_re = re.compile(r"^(\d+\.?\d*)\s*(?:mg/unit|mg/g)$", re.IGNORECASE)
         skip_re = re.compile(r"^(pass|fail|mu range|not tested|nd|nr|<loq|safe|pesticide|microbial|mycotoxin|solvent|metal|foreign)", re.IGNORECASE)
         layout = None
         for i, line in enumerate(lines):
@@ -98,7 +98,8 @@ class ConfidentParser(BaseParser):
                 return f"{m.group(1)}%"
             m = mg_unit_re.match(line)
             if m:
-                return f"{m.group(1)} mg/unit"
+                unit = "mg/unit" if "mg/unit" in line.lower() else "mg/g"
+                return f"{m.group(1)} {unit}"
             return None
 
         for i, line in enumerate(lines):
@@ -130,9 +131,11 @@ class ConfidentParser(BaseParser):
         result_index = 2
         mg_unit_mode = False
         mg_unit_items: list[tuple[str, float]] = []
+        _mg_unit_str = "mg/unit"
         _section_type = None
         _first_section_entered = False
         _ppm_mode = False
+        _4col_mode = False
 
         i = 0
         while i < len(lines):
@@ -147,6 +150,7 @@ class ConfidentParser(BaseParser):
                 result_index = 2
                 mg_unit_mode = False
                 _ppm_mode = False
+                _4col_mode = False
                 # On the very first data-section entry, clear seen and trim results
                 # to only totals (removes false positives from product-name lines).
                 # Do NOT repeat this on subsequent section entries or transitions
@@ -160,11 +164,12 @@ class ConfidentParser(BaseParser):
                     seen.clear()
                 found_ppm = False
                 _saw_pct_header = False
+                _has_mass_column = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
-                    if re.match(r"^lod\b", ahead_lower):
+                    if re.match(r"^lod\b", ahead_lower) or re.search(r"(?<!\w)lod(?!\w)", ahead_lower):
                         result_index = 3
-                        break
+                        _4col_mode = True
                     if re.match(r"^(loq|reporting)\b", ahead_lower):
                         # LOQ / Reporting Limit is the first data column; Mass% stays at index 2
                         pass
@@ -174,6 +179,8 @@ class ConfidentParser(BaseParser):
                         _saw_pct_header = True
                     if is_terpene and "ppm" in ahead_lower:
                         found_ppm = True
+                    if ahead_lower == "mass":
+                        _has_mass_column = True
                     if re.match(r"^result\s*\(%\)", ahead_lower):
                         for k in range(j + 1, min(j + 5, len(lines) - i)):
                             later = lines[i + k].strip().lower()
@@ -189,6 +196,9 @@ class ConfidentParser(BaseParser):
                     pass
                 if is_terpene and found_ppm and not _saw_pct_header:
                     _ppm_mode = True
+                if _has_mass_column:
+                    mg_unit_mode = True
+                    _mg_unit_str = "mg/g"
 
             # Detect end of cannabinoid/terpene data sections: when a different
             # test section starts (pesticides, solvents, etc.), stop matching.
@@ -282,7 +292,7 @@ class ConfidentParser(BaseParser):
                         if nd_re.match(ahead_line):
                             value = "ND"
                             break
-                        if re.match(r"^<(?:LOQ|[\d.]+)", ahead_line, re.IGNORECASE):
+                        if re.search(r"<\s*(?:LOQ|[\d.]+)", ahead_line, re.IGNORECASE):
                             below_loq = True
                             break
                         if re.match(r"^NR$", ahead_line, re.IGNORECASE):
@@ -294,7 +304,7 @@ class ConfidentParser(BaseParser):
                 inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
 
                 result_values: list[str] = []
-                _inline_max = 99999.99 if (_ppm_mode or _section_type == "terpenes") else 999.99
+                _inline_max = 99999.99 if (_ppm_mode or _section_type == "terpenes" or _4col_mode) else 999.99
                 for num_str in inline_matches:
                     num = float(num_str)
                     if "." in num_str or int(num) >= 10:
@@ -335,7 +345,7 @@ class ConfidentParser(BaseParser):
                         value = "ND"
                         got_value = True
                         break
-                    if re.match(r"^<(?:LOQ|[\d.]+)", candidate_line, re.IGNORECASE):
+                    if re.search(r"<\s*(?:LOQ|[\d.]+)", candidate_line, re.IGNORECASE):
                         below_loq = True
                         got_value = True
                         break
@@ -364,7 +374,7 @@ class ConfidentParser(BaseParser):
                         inline_nums = inline_values_re.findall(candidate_line)
                         for num_str in inline_nums:
                             num = float(num_str)
-                            max_val = 99999.99 if (mg_unit_mode or _ppm_mode or _section_type == "terpenes") else 999.99
+                            max_val = 99999.99 if (mg_unit_mode or _ppm_mode or _section_type == "terpenes" or _4col_mode) else 999.99
                             if "." in num_str or int(num) >= 10:
                                 if num <= max_val:
                                     numeric_count += 1
@@ -428,7 +438,7 @@ class ConfidentParser(BaseParser):
                 for name, mg_val in mg_unit_items:
                     pct = (mg_val / total_mg) * 100
                     if pct >= 0.01:
-                        computed_map[name.lower()] = f"{name}: {pct:.2f}% ({mg_val:.4g} mg/unit)"
+                        computed_map[name.lower()] = f"{name}: {pct:.2f}% ({mg_val:.4g} {_mg_unit_str})"
                 new_filtered: list[str] = []
                 seen_names: set[str] = set()
                 for item in filtered:

@@ -26,4 +26,4 @@ class MainWindow(QMainWindow):
         self.metrc_tab.pdf_downloaded.connect(self._on_pdf_downloaded)
 
     def _on_pdf_downloaded(self, path: str) -> None:
-        self.coa_tab.refresh_file_list()
+        self.coa_tab.add_downloaded_pdf(path)

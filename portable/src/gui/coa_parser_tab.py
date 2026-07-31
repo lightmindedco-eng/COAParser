@@ -352,14 +352,27 @@ class COAParserTab(QWidget):
         if self.file_list.count() > 0:
             self.file_list.setCurrentRow(0)
 
+    def add_downloaded_pdf(self, path: str) -> None:
+        for i in range(self.file_list.count()):
+            if self.file_list.item(i).data(Qt.UserRole) == path:
+                return
+        self.file_list.blockSignals(True)
+        self.file_list.addItem(Path(path).name)
+        item = self.file_list.item(self.file_list.count() - 1)
+        item.setData(Qt.UserRole, str(path))
+        self.file_list.blockSignals(False)
+        if not (self._preload_thread and self._preload_thread.isRunning()):
+            self._start_preload()
+
     def _start_preload(self) -> None:
         self._preload_id += 1
         current_id = self._preload_id
 
         if self._preload_thread:
+            if self._preload_thread.isRunning():
+                return
             try:
-                if self._preload_thread.isRunning():
-                    self._preload_thread.quit()
+                self._preload_thread.quit()
             except RuntimeError:
                 pass
             finally:

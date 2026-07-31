@@ -144,7 +144,7 @@ def detect_product_name(lines: list[str]) -> str | None:
                     next_line = lines[k].strip()
                     if not next_line or ":" in next_line:
                         break
-                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate|client|produced|amended|collection|completed)", next_line, re.IGNORECASE):
+                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate|client|produced|amended|collection|completed|summary|cannabinoid|terpene|pesticide|solvent|microbial|moisture|mycotoxin|pass|fail|water\s+activity|heavy\s+metal|foreign)", next_line, re.IGNORECASE):
                         break
                     # Stop at company names (all caps, 2+ words), addresses, or emails
                     if re.match(r"^[A-Z][A-Z\s]+$", next_line) and len(next_line.split()) >= 2:
@@ -157,12 +157,24 @@ def detect_product_name(lines: list[str]) -> str | None:
                         full_candidate = full_candidate + " " + next_line
                     else:
                         break
-                # Skip candidates that look like METRC categories, sample IDs, or metadata
+                # Skip candidates that look like METRC categories, sample IDs, or section headers
                 if re.search(r"(concentrate|metrc|sample\s+(matrix|collection|id|size|storage)|harvest|production\s+batch|primary\s+sample|lot\s+#|batch\s+#)", full_candidate, re.IGNORECASE):
                     continue
-                # Skip if candidate is shorter than already-known strain value
-                if strain_value and len(full_candidate) <= len(strain_value) - 3:
+                # Skip candidates that start with a category-line pattern (e.g., "Plant, Flower - Cured;")
+                if re.match(r"^(plant,\s|concentrates?\s+(?:&\s+)?extracts?,\s|infused\s+(?:non.edible|nonedible|preroll|pre.roll),\s)", full_candidate.strip(), re.IGNORECASE):
                     continue
+                # Skip candidates composed entirely of section header words
+                _section_words = re.compile(
+                    r"^(summary|test|result|cannabinoid|terpene|pesticide|solvent|microbial|moisture|mycotoxin|pass|fail|complete|analyte|limit|method|sop|water\s*activity|heavy\s*metal|foreign|residual|potency|sample|collection|infection|contaminant|not\s+tested|not\s+detected|not\s+reported)(?:\s+(?:test|result|summary|cannabinoid|terpene|pesticide|solvent|complete|pass|fail|limit|method|analyte))*$",
+                    re.IGNORECASE
+                )
+                if _section_words.match(full_candidate.strip()):
+                    continue
+                # Skip if candidate is shorter than already-known strain value
+                # (unless one is a substring of the other — the shorter form may be cleaner)
+                if strain_value and len(full_candidate) <= len(strain_value) - 3:
+                    if full_candidate not in strain_value and strain_value not in full_candidate:
+                        continue
                 # Check for a fuller product description (with dashes or longer/more specific)
                 if len(full_candidate) > 15 and " - " in full_candidate:
                     return _clean_product_name(full_candidate)
@@ -195,7 +207,7 @@ def detect_product_name(lines: list[str]) -> str | None:
             if candidate_lines:
                 joined = " ".join(candidate_lines).strip()
                 # Reject if it looks like a plain date, number, or is too short
-                if len(joined) > 3 and not re.match(r"^[\d/\s:.-]+$", joined):
+                if len(joined) >= 2 and not re.match(r"^[\d/\s:.-]+$", joined):
                     return _clean_product_name(joined)
             break
 
@@ -496,6 +508,8 @@ def _detect_metrc_category_raw(lines: list[str]) -> str | None:
         "Edible (Count-Weight)",
         "Ingestible, Chocolate",
         "Ingestible, Baked Goods",
+        "Ingestible, Capsule",
+        "Ingestible, Spread",
     }
     _METRC_SHORT = {c.lower(): c for c in _METRC_CATEGORIES}
     # Non-canonical forms → canonical category (sample matrix labels, etc.)

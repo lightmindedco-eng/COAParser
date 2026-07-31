@@ -25,3 +25,9 @@ BatchResults/
 portable/Output/
 portable/Input/
 batch_summary.json
+
+# Local tooling and scratch artifacts
+.opencode/
+_dumps/
+stderr.txt
+stdout.txt

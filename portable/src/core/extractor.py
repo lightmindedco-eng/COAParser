@@ -52,7 +52,7 @@ def read_text(path: str | Path) -> str:
                         try:
                             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
                             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                            ocr_text = pytesseract.image_to_string(img).strip()
+                            ocr_text = pytesseract.image_to_string(img, config="--psm 6 --oem 1").strip()
                             if ocr_text:
                                 page_texts.append(ocr_text)
                         except Exception as e:

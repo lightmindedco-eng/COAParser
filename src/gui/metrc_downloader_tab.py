@@ -154,13 +154,16 @@ _CAPTURE_JS = r"""
     document.body.appendChild(overlay);
 
     // mousedown fires BEFORE click/navigation — capture data immediately
-    document.addEventListener('mousedown', function(e) {
+    var handler = function(e) {
         capture(e.target);
-        // Don't prevent default — let click proceed naturally
-        // Clean up style/overlay on first click
         document.getElementById('coa-capture-style')?.remove();
         document.getElementById('coa-capture-overlay')?.remove();
-    }, true);
+    };
+    document.addEventListener('mousedown', handler, true);
+    // Track listener for cleanup
+    var listeners = document.__coa_capture_listeners;
+    if (!listeners) { listeners = []; document.__coa_capture_listeners = listeners; }
+    listeners.push(handler);
 
     return JSON.stringify({ok: true});
 })()
@@ -190,15 +193,109 @@ _CAPTURE_CLEANUP_JS = r"""
     document.getElementById('coa-capture-overlay')?.remove();
     window.__coa_capture_result = null;
     try { localStorage.removeItem('__coa_capture_result'); } catch(ex) {}
+    // Remove all old capture mousedown listeners
+    var old = document.__coa_capture_listeners;
+    if (old) {
+        old.forEach(function(fn) { document.removeEventListener('mousedown', fn, true); });
+        document.__coa_capture_listeners = [];
+    }
+    return true;
+})()
+"""
+
+_WATCHER_JS = r"""
+(function() {
+    if (document.getElementById('coa-watcher-marker')) {
+        return 'already active';
+    }
+    var marker = document.createElement('div');
+    marker.id = 'coa-watcher-marker';
+    marker.style.display = 'none';
+    document.body.appendChild(marker);
+
+    var processing = false;
+    var processedPkgIds = new Set();
+    var absentCount = 0;
+
+    function getPkgIdFromRow(row) {
+        if (!row) return null;
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 2) return null;
+        return cells[1].textContent.trim() || null;
+    }
+
+    function getDetailContainer(masterRow) {
+        var detailRow = masterRow.nextElementSibling;
+        return (detailRow && detailRow.classList.contains('k-detail-row')) ? detailRow : null;
+    }
+
+    window.__coa_watcher_interval = setInterval(function() {
+        if (processing) return;
+
+        var collapseEls = document.querySelectorAll('[aria-label=Collapse]');
+        if (collapseEls.length === 0) {
+            absentCount++;
+            if (absentCount >= 6 && processedPkgIds.size > 0) {
+                processedPkgIds.clear();
+            }
+            return;
+        }
+        absentCount = 0;
+
+        for (var i = 0; i < collapseEls.length; i++) {
+            var masterRow = collapseEls[i].closest('tr');
+            var pkgId = getPkgIdFromRow(masterRow);
+            if (!pkgId || processedPkgIds.has(pkgId)) continue;
+
+            var detailRow = getDetailContainer(masterRow);
+            if (!detailRow) break;
+
+            processedPkgIds.add(pkgId);
+            processing = true;
+
+            (function(dr) {
+                setTimeout(function() {
+                    var labTab = document.evaluate(
+                        './/SPAN[contains(text(),"Lab Results")]',
+                        dr, null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE, null
+                    ).singleNodeValue;
+                    if (labTab) labTab.click();
+
+                    setTimeout(function() {
+                        var docBtn = dr.querySelector('a.k-button.k-button-icontext.grid-row-button.k-grid-download-document');
+                        if (!docBtn) docBtn = dr.querySelector('span.icon-file');
+                        if (docBtn) docBtn.click();
+                        processing = false;
+                    }, 1200);
+                }, 500);
+            })(detailRow);
+
+            break;
+        }
+    }, 250);
+
+    return 'watching';
+})()
+"""
+
+_WATCHER_STOP_JS = r"""
+(function() {
+    var m = document.getElementById('coa-watcher-marker');
+    if (m) m.remove();
+    if (window.__coa_watcher_interval) {
+        clearInterval(window.__coa_watcher_interval);
+        window.__coa_watcher_interval = null;
+    }
     return true;
 })()
 """
 
 # ── Click execution ────────────────────────────────────────────────────
 
-_CLICK_JS_T = "(function(){var e=document.querySelector({sel!r});if(e){e.click();return true;}return false;})()"
+_CLICK_JS_T = "(function(){{var e=document.querySelector({sel!r});if(e){{e.click();return true;}}return false;}})()"
 _COUNT_ALL_JS_T = "document.querySelectorAll({sel!r}).length"
-_NTH_CLICK_JS_T = "(function(){var e=document.querySelectorAll({sel!r})[{n}];if(e){e.click();return true;}return false;})()"
+_NTH_CLICK_JS_T = "(function(){{var e=document.querySelectorAll({sel!r})[{n}];if(e){{e.click();return true;}}return false;}})()"
 
 # ── Login autofill JS ────────────────────────────────────────────────
 
@@ -275,10 +372,19 @@ _LOGIN_JS = r"""
 _POPUP_JS = r"""
 (function() {
     var origOpen = window.open;
+    var _coaIframeCount = 0;
     window.open = function(url, target, features) {
         if (url && (url.indexOf('/filesystem/') !== -1 || url.indexOf('/document') !== -1 || url.indexOf('.pdf') !== -1)) {
-            window.location.href = url;
-            return null;
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            _coaIframeCount++;
+            if (_coaIframeCount > 10) {
+                var old = document.querySelector('iframe[src*="/filesystem/"], iframe[src*="/document"], iframe[src*=".pdf"]');
+                if (old && old.parentNode) old.parentNode.removeChild(old);
+            }
+            return iframe.contentWindow;
         }
         return origOpen ? origOpen.apply(this, arguments) : null;
     };
@@ -514,6 +620,7 @@ class METRCDownloaderTab(QWidget):
         self._capture_timeout: float = 0
         self._zoom_factor = self.DEFAULT_ZOOM
         self._detect_active = False
+        self._detect_cancelled = False
         self._pre_detect_url: str | None = None
 
         # Detection state
@@ -536,6 +643,8 @@ class METRCDownloaderTab(QWidget):
         # Download tracking
         self._return_url: str | None = None
         self._download_triggered = False
+
+
 
         self._build_ui()
         self._refresh_profiles()
@@ -607,6 +716,52 @@ class METRCDownloaderTab(QWidget):
         nav.addWidget(self._url_bar, stretch=1)
 
         layout.addLayout(nav)
+
+        recipe_bar = QHBoxLayout()
+        recipe_bar.setSpacing(6)
+
+        self._watch_btn = QPushButton("Watch")
+        self._watch_btn.setCheckable(True)
+        self._watch_btn.setStyleSheet("background: #27ae60; color: #fff; font-weight: 700; padding: 4px 14px;")
+        self._watch_btn.toggled.connect(self._on_watch_toggled)
+        recipe_bar.addWidget(self._watch_btn)
+
+        recipe_bar.addSpacing(12)
+
+        self._record_btn = QPushButton("Record Recipe")
+        self._record_btn.setCheckable(True)
+        self._record_btn.setStyleSheet("font-weight: 600;")
+        self._record_btn.toggled.connect(self._on_record_toggled)
+        recipe_bar.addWidget(self._record_btn)
+
+        self._add_step_btn = QPushButton("Add Step")
+        self._add_step_btn.setVisible(False)
+        self._add_step_btn.setStyleSheet("background: #f39c12; color: #fff; font-weight: 600;")
+        self._add_step_btn.clicked.connect(self._capture_next_step)
+        recipe_bar.addWidget(self._add_step_btn)
+
+        self._detect_btn = QPushButton("Run Recipes")
+        self._detect_btn.setStyleSheet("background: #8e44ad; color: #fff; font-weight: 600;")
+        self._detect_btn.clicked.connect(self._detect_downloads)
+        recipe_bar.addWidget(self._detect_btn)
+
+        self._cancel_btn = QPushButton("Cancel")
+        self._cancel_btn.setVisible(False)
+        self._cancel_btn.setStyleSheet("background: #c0392b; color: #fff; font-weight: 600;")
+        self._cancel_btn.clicked.connect(self._cancel_detect)
+        recipe_bar.addWidget(self._cancel_btn)
+
+        self._recipes_btn = QPushButton("Manage Recipes...")
+        self._recipes_btn.clicked.connect(self._open_recipe_manager)
+        recipe_bar.addWidget(self._recipes_btn)
+
+        self._dump_btn = QPushButton("Dump HTML")
+        self._dump_btn.setStyleSheet("font-size: 10px;")
+        self._dump_btn.clicked.connect(self._dump_page_html)
+        recipe_bar.addWidget(self._dump_btn)
+
+        recipe_bar.addStretch()
+        layout.addLayout(recipe_bar)
 
         self._web_view = QWebEngineView()
         self._web_view.settings().setAttribute(QWebEngineSettings.PdfViewerEnabled, False)
@@ -723,7 +878,7 @@ class METRCDownloaderTab(QWidget):
 
         url_str = url.toString()
         lower = url_str.lower()
-        if any(kw in lower for kw in [".pdf", "/filesystm/", "/document", "/export"]):
+        if any(kw in lower for kw in [".pdf", "/filesystem/", "/document", "/export"]):
             if not self._download_triggered:
                 self._download_triggered = True
                 self._status_label.setText(f"Downloading: {Path(url.path()).name}")
@@ -796,6 +951,9 @@ class METRCDownloaderTab(QWidget):
             self._download_bar.setFormat(f"Downloading {name}  {pct}%")
 
     def _on_download_finished(self, download: QWebEngineDownloadRequest, dest: str) -> None:
+        if self._detect_cancelled:
+            self._current_download = None
+            return
         self._download_bar.setVisible(False)
         if download.isFinished() and download.state() == QWebEngineDownloadRequest.DownloadCompleted:
             self._status_label.setText(f"Saved: {Path(dest).name}")
@@ -807,6 +965,26 @@ class METRCDownloaderTab(QWidget):
         self._current_download = None
         if self._detect_active:
             self._advance_detect()
+
+    # ------------------------------------------------------------------
+    # Watch mode
+    # ------------------------------------------------------------------
+
+    def _on_watch_toggled(self, active: bool) -> None:
+        if active:
+            self._watch_btn.setText("Stop Watch")
+            self._status_label.setText("Watch active — expand a row")
+            self._web_view.page().runJavaScript(_WATCHER_JS, self._on_watch_result)
+        else:
+            self._watch_btn.setText("Watch")
+            self._status_label.setText("Watch stopped")
+            self._web_view.page().runJavaScript(_WATCHER_STOP_JS)
+
+    def _on_watch_result(self, raw: object) -> None:
+        if raw == "already active":
+            self._status_label.setText("Watch already active")
+        elif raw == "watching":
+            self._status_label.setText("Watch active — expand a row to auto-download")
 
     # ------------------------------------------------------------------
     # Recipe recording
@@ -835,7 +1013,10 @@ class METRCDownloaderTab(QWidget):
             f"Step {len(self._recording_steps) + 1}: click the element on the page..."
         )
         self._capture_timeout = time.monotonic() + 30
-        self._web_view.page().runJavaScript(_CAPTURE_JS, self._on_capture_injected)
+        self._capture_cleanup()
+        QTimer.singleShot(150, lambda: self._web_view.page().runJavaScript(
+            _CAPTURE_JS, self._on_capture_injected
+        ))
 
     def _on_capture_injected(self, raw: object) -> None:
         QTimer.singleShot(300, self._poll_capture)
@@ -915,6 +1096,39 @@ class METRCDownloaderTab(QWidget):
     def _open_recipe_manager(self) -> None:
         RecipeManagerDialog(self).exec()
 
+    def _dump_page_html(self) -> None:
+        js = r"""
+(function() {
+    var info = {
+        url: location.href,
+        title: document.title,
+        bodyHtml: document.body ? document.body.innerHTML.substring(0, 50000) : '(no body)',
+        selectors: []
+    };
+    var recipes = null;
+    try {
+        var raw = localStorage.getItem('__coa_recipes');
+        if (raw) recipes = JSON.parse(raw);
+    } catch(e) {}
+    info.recipes = recipes;
+    return JSON.stringify(info);
+})()
+"""
+        self._web_view.page().runJavaScript(js, self._on_dump_result)
+
+    def _on_dump_result(self, raw: object) -> None:
+        import datetime
+        dump_dir = Path("_dumps")
+        dump_dir.mkdir(exist_ok=True)
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = dump_dir / f"pagedump_{ts}.json"
+        if raw and isinstance(raw, str):
+            path.write_text(raw, encoding="utf-8")
+            self._status_label.setText(f"Page dump saved to {path}")
+            logger.info("Page dump saved to %s", path)
+        else:
+            self._status_label.setText("Page dump failed")
+
     # ------------------------------------------------------------------
     # Detection (runs all recipes)
     # ------------------------------------------------------------------
@@ -933,6 +1147,7 @@ class METRCDownloaderTab(QWidget):
             return
 
         self._detect_active = True
+        self._detect_cancelled = False
         self._job_queue = []
         self._detect_completed = 0
 
@@ -940,22 +1155,25 @@ class METRCDownloaderTab(QWidget):
             steps = recipe.get("steps", [])
             name = recipe.get("name", "?")
             batch = recipe.get("batch", False)
-            total_steps = len(steps)
 
             for i, step in enumerate(steps):
+                if batch and i > 0:
+                    continue
                 selectors = step.get("selectors", [])
-                is_last = (i == total_steps - 1)
+                is_first = (i == 0)
                 self._job_queue.append({
                     "label": f"[{name}] {step.get('text', '?')}",
                     "selectors": selectors,
                     "urls": step.get("urls", []),
                     "delay_ms": step.get("delay_ms", 5000),
-                    "expand": batch and is_last,
+                    "expand": batch and is_first,
+                    "batch_followups": steps[1:] if (batch and is_first) else [],
                 })
 
         self._total_jobs_initial = len(self._job_queue)
         self._job_expand_pending: list[str] = []
-        self._detect_btn.setEnabled(False)
+        self._detect_btn.setVisible(False)
+        self._cancel_btn.setVisible(True)
         self._status_label.setText(f"Running {len(recipes)} recipe(s)...")
         self._download_bar.setMaximum(500)
         self._download_bar.setValue(0)
@@ -964,6 +1182,8 @@ class METRCDownloaderTab(QWidget):
         self._process_next_job()
 
     def _process_next_job(self) -> None:
+        if self._detect_cancelled:
+            return
         if self._current_download is not None:
             return
         if not self._job_queue:
@@ -978,6 +1198,8 @@ class METRCDownloaderTab(QWidget):
             self._execute_job(job)
 
     def _expand_job(self, job: dict) -> None:
+        if self._detect_cancelled:
+            return
         selectors = job.get("selectors", [])
         sel = self._pick_best_selector(selectors) or self._pick_best_xpath(selectors)
         if not sel:
@@ -993,6 +1215,8 @@ class METRCDownloaderTab(QWidget):
         self._web_view.page().runJavaScript(js, lambda count: self._on_count_result(count, job))
 
     def _on_count_result(self, count: object, job: dict) -> None:
+        if self._detect_cancelled:
+            return
         try:
             n = int(count) if count is not None else 0
         except (TypeError, ValueError):
@@ -1010,14 +1234,21 @@ class METRCDownloaderTab(QWidget):
             return
         delay_ms = job.get("delay_ms", 5000)
         urls = job.get("urls", [])
+        followups = job.get("batch_followups", [])
 
-        for idx in range(n):
+        for idx in range(n - 1, -1, -1):
+            for fu in reversed(followups):
+                self._job_queue.insert(0, {
+                    "label": f"{fu.get('text', '?')} ({idx + 1}/{n})",
+                    "selectors": fu.get("selectors", []),
+                    "urls": fu.get("urls", []),
+                    "delay_ms": fu.get("delay_ms", 5000),
+                })
             self._job_queue.insert(0, {
                 "label": f"{label} ({idx + 1}/{n})",
                 "sel_nth": (sel, idx),
                 "delay_ms": delay_ms,
                 "urls": urls,
-                "expand": False,
             })
 
         self._download_bar.setMaximum(len(self._job_queue) + 1)
@@ -1025,6 +1256,8 @@ class METRCDownloaderTab(QWidget):
         self._process_next_job()
 
     def _execute_job(self, job: dict) -> None:
+        if self._detect_cancelled:
+            return
         self._download_bar.setValue(self._download_bar.maximum() - len(self._job_queue))
         total = self._download_bar.maximum()
         done = total - len(self._job_queue)
@@ -1115,7 +1348,6 @@ class METRCDownloaderTab(QWidget):
         self._status_label.setText(f"Downloading via URL: {url}")
         logger.info("URL fallback downloading: %s", full_url)
         self._web_view.page().download(QUrl(full_url))
-        QTimer.singleShot(5000, self._check_download_or_advance)
 
     def _execute_xpath_click(self, xpath: str, delay_ms: int) -> None:
         self._pre_detect_url = self._web_view.url().toString()
@@ -1143,6 +1375,8 @@ class METRCDownloaderTab(QWidget):
             self._try_url_fallback()
 
     def _check_download_or_advance(self) -> None:
+        if self._detect_cancelled:
+            return
         if self._current_download is not None:
             return
         self._process_next_job()
@@ -1152,8 +1386,25 @@ class METRCDownloaderTab(QWidget):
 
     def _finish_detect(self) -> None:
         self._detect_active = False
+        self._cancel_btn.setVisible(False)
+        self._detect_btn.setVisible(True)
         self._download_bar.setVisible(False)
         self._status_label.setText("Detection finished")
+
+    def _cancel_detect(self) -> None:
+        self._detect_cancelled = True
+        self._detect_active = False
+        self._job_queue.clear()
+        if self._current_download is not None:
+            try:
+                self._current_download.cancel()
+            except RuntimeError:
+                pass
+            self._current_download = None
+        self._cancel_btn.setVisible(False)
+        self._detect_btn.setVisible(True)
+        self._download_bar.setVisible(False)
+        self._status_label.setText("Cancelled")
 
     # ------------------------------------------------------------------
     # Selector helpers

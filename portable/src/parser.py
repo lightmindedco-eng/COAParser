@@ -73,7 +73,7 @@ class COAParser:
 
         try:
             if has_embedded_coa_images(path):
-                ocr_data = extract_ocr_items(path)
+                ocr_data = extract_ocr_items(path, parser_name=format_name)
                 if ocr_data:
                     metadata["strain_groups"] = ocr_data
         except Exception:
