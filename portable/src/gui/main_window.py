@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMainWindow, QTabWidget
 
 from src.gui.coa_parser_tab import COAParserTab
+from src.gui.database_output_tab import DatabaseOutputTab
 from src.gui.metrc_downloader_tab import METRCDownloaderTab
 
 
@@ -22,6 +23,9 @@ class MainWindow(QMainWindow):
 
         self.coa_tab = COAParserTab()
         self.tabs.addTab(self.coa_tab, "COA Parser")
+
+        self.db_tab = DatabaseOutputTab()
+        self.tabs.addTab(self.db_tab, "Database Output")
 
         self.metrc_tab.pdf_downloaded.connect(self._on_pdf_downloaded)
 
