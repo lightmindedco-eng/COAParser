@@ -267,6 +267,16 @@ class ConfidentParser(BaseParser):
             # test section starts (pesticides, solvents, etc.), stop matching.
             # Clear section type and seen, but DO NOT touch results – the
             # compounds already extracted from this section are valid.
+            if _section_type and re.match(r"^certi", line_lower):
+                # Each page of a Confident report restarts with the document
+                # title ("Certificate of Analysis"). Data sections never span
+                # pages, so end the section here to stop page-2 header/product
+                # metadata (e.g. "50mg THC:100mg CBD") from being parsed as
+                # compound rows.
+                _section_type = None
+                seen.clear()
+                i += 1
+                continue
             if _section_type and re.search(r"^(pesticide|residual\s+solvent|microbial|mycotoxin|heavy\s+metal|moisture|water\s+activity|foreign\s+matter|amendment)", line_lower):
                 # Moisture/Water-Activity can appear as summary rows WITHIN a
                 # cannabinoid section, not only as section boundaries.  Peek

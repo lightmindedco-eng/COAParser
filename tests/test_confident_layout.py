@@ -163,3 +163,45 @@ def test_confident_deglues_glued_decimal_cells() -> None:
     assert "Farnesene: 0.075%" in items
     assert "Caryophyllene Oxide: 0.016%" in items
     assert "beta-Myrcene: 0.539%" in items
+
+
+def test_confident_page_boundary_stops_section() -> None:
+    """Each page restarts with 'Certificate of Analysis' and no data section
+    spans the page break. Page-2 product metadata like '50mg THC:100mg CBD:CBN'
+    must not be parsed as compound rows (previously leaked as 'THC: 50%')."""
+    lines = [
+        "Certificate of Analysis",
+        "Powered by Confident LIMS",
+        "Shico LLC",
+        "Cannabinoids",
+        "Analyte",
+        "LOQ",
+        "Results",
+        "Results",
+        "%",
+        "THCa",
+        "0.04",
+        "21.41",
+        "Δ9-THC",
+        "0.04",
+        "4.84",
+        "Total",
+        "23.62",
+        "Certificate of Analysis",
+        "Powered by Confident LIMS",
+        "Shico LLC",
+        "Smokiez Sweet Watermelon 50mg THC:100mg CBD:CBN 1:2:2 Fruit",
+        "Chews",
+        "Ingestible, Soft Chew",
+        "Pesticides",
+        "Pass",
+    ]
+
+    parser = ConfidentParser()
+    result = parser.parse(lines)
+    items = result["items"]
+
+    assert "THC: 50%" not in items
+    assert "THC: 100%" not in items
+    assert "THCa: 21.41%" in items
+    assert "Delta-9-THC: 4.84%" in items
