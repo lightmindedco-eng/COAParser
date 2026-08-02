@@ -25,3 +25,16 @@ BatchResults/
 portable/Output/
 portable/Input/
 batch_summary.json
+
+# Local tooling and scratch artifacts
+.opencode/
+_dumps/
+stderr.txt
+stdout.txt
+
+# Generated database exports
+COA_Database_*.zip
+Database Outputs/
+
+# Firebase service account secret
+firebase-service-account.json

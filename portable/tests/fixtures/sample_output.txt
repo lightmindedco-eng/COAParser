@@ -1,0 +1,22 @@
+============================================================
+COA Parser Report
+Source file : 1A40E01000033AE000000687.pdf
+Detected format : confident
+============================================================
+
+Product : Energy Bath Bomb
+METRC Category : N/A
+
+CANNABINOIDS
+------------------------------
+  Total THC: 86.07 mg/unit
+  Total Cannabinoids: 86.07 mg/unit
+  Delta-9-THC: 100.00% (86.07 mg/unit)
+
+TERPENES
+------------------------------
+  Total Terpenes: 0.12%
+  Ocimene: 0.07%
+  Limonene: 0.04%
+
+============================================================

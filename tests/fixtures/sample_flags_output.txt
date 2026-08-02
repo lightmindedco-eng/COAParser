@@ -1,0 +1,83 @@
+============================================================
+COA Parser Report
+Source file : 1A40E0100004FB3000030436.pdf
+Detected format : confident
+============================================================
+
+Product : FG | Vape | 2.0g Disposable | Bodega Boyz - Blueberry Muf×n & Sherblato
+METRC Category : Concentrates & Extracts, Vape
+
+CANNABINOIDS
+------------------------------
+  Total THC: 85.35%
+  Total Cannabinoids: 85.35%
+  Delta-9-THC: 85.35%
+  THC: 85.35%
+  Delta-8-THC
+
+TERPENES
+------------------------------
+  Total Terpenes: 5.960%
+  Limonene: 2.226%
+  beta-Myrcene: 1.076%
+  beta-Caryophyllene: 0.607%
+  alpha-Pinene: 0.599%
+  Linalool: 0.392%
+  beta-Pinene: 0.282%
+  alpha-Humulene: 0.169%
+  Camphene: 0.153%
+  alpha-Bisabolol: 0.151%
+  Guaiol: 0.085%
+  Terpinolene: 0.057%
+  gamma-Terpinene: 0.025%
+
+============================================================
+
+Blueberry Muffin & Sherblato (1)
+------------------------------
+  CANNABINOIDS
+    THC: 84.56%
+    Total THC: 84.56%
+  TERPENES
+    Total Terpenes: 2.406%
+    Guaiol: 0.083%
+    Limonene: 0.833%
+    Linalool: 0.495%
+    Terpinolene: 0.056%
+    alpha-Bisabolol: 0.180%
+    alpha-Humulene: 0.178%
+    alpha-Pinene: 0.066%
+    beta-Myrcene: 0.366%
+    beta-Pinene: 0.121%
+    gamma-Terpinene: 0.028%
+
+Blueberry Muffin & Sherblato (2)
+------------------------------
+  CANNABINOIDS
+    THC: 85.35%
+    Total THC: 85.35%
+  TERPENES
+    Total Terpenes: 4.676%
+    Camphene: 0.153%
+    Guaiol: 0.085%
+    Limonene: 2.226%
+    Linalool: 0.392%
+    Terpinolene: 0.057%
+    alpha-Bisabolol: 0.151%
+    alpha-Humulene: 0.169%
+    alpha-Pinene: 0.0599%
+    beta-Myrcene: 1.076%
+    beta-Pinene: 0.282%
+    gamma-Terpinene: 0.025%
+
+Blueberry Muffin & Sherblato (3)
+------------------------------
+  TERPENES
+    Total Terpenes: 0.5922%
+    Limonene: 0.0833%
+    Linalool: 0.0495%
+    alpha-Pinene: 0.0658%
+    beta-Myrcene: 0.3659%
+    gamma-Terpinene: 0.0277%
+
+============================================================

@@ -35,3 +35,6 @@ stdout.txt
 # Generated database exports
 COA_Database_*.zip
 Database Outputs/
+
+# Firebase service account secret
+firebase-service-account.json
