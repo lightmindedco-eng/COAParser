@@ -9,4 +9,5 @@ class ParsedResult:
     format_name: str
     items: list[str] = field(default_factory=list)
     output_path: str | None = None
+    webp_path: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)

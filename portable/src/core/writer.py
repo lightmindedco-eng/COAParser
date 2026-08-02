@@ -5,6 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+# Maps output stem -> source filename that created it. When a different source
+# PDF would collide on the same output name, a numeric suffix is appended so
+# every input keeps its own .txt / .webp pair.
+_STEM_SOURCES: dict[str, str] = {}
+
 
 def write_output(
     output_dir: str,
@@ -34,13 +39,25 @@ def write_output(
         parts.append(f"({report_date})")
 
     if parts:
-        stem = "".join(parts)
+        base_stem = "".join(parts)
     else:
-        stem = Path(filename).stem
+        base_stem = Path(filename).stem
 
     # Sanitize for filename
-    stem = re.sub(r'[<>:"/\\|?*]', '-', stem)
-    stem = stem.strip('. ')
+    base_stem = re.sub(r'[<>:"/\\|?*]', '-', base_stem)
+    base_stem = base_stem.strip('. ')
+
+    source_name = Path(filename).name
+    stem = base_stem
+    if _STEM_SOURCES.get(stem, source_name) != source_name:
+        n = 2
+        while True:
+            candidate = f"{base_stem} ({n})"
+            if _STEM_SOURCES.get(candidate, source_name) == source_name:
+                stem = candidate
+                break
+            n += 1
+    _STEM_SOURCES[stem] = source_name
 
     output_path = path / f"{stem}.txt"
     output_path.write_text(content, encoding="utf-8")

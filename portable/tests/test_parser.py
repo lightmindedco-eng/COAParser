@@ -44,3 +44,31 @@ def test_read_text_extracts_text_from_pdf(tmp_path: Path) -> None:
     text = read_text(pdf_path)
     assert "THC" in text
     assert "Myrcene" in text
+
+
+def test_parse_file_writes_matching_webp_for_pdf(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "sample.pdf"
+    pdf_path.write_bytes(
+        b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n4 0 obj\n<< /Length 43 >>\nstream\nBT /F1 24 Tf 50 70 Td (THC CBD Myrcene) Tj ET\nendstream\nendobj\n5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000062 00000 n \n0000000119 00000 n \n0000000207 00000 n \n0000000305 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n0\n%%EOF\n"
+    )
+
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+
+    parser = COAParser()
+    result = parser.parse_file(pdf_path, output_dir=str(output_dir))
+
+    assert result.output_path is not None
+    assert result.webp_path is not None
+
+    from PIL import Image
+
+    txt_path = Path(result.output_path)
+    webp_path = Path(result.webp_path)
+    assert txt_path.suffix == ".txt"
+    assert webp_path.suffix == ".webp"
+    assert webp_path.stem == txt_path.stem
+
+    image = Image.open(webp_path)
+    assert image.format == "WEBP"
+    assert image.width > 0 and image.height > 0

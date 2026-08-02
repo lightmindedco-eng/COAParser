@@ -10,6 +10,7 @@ from typing import Any
 from src.core.detector import detect_format, detect_product_name, detect_company_name, detect_metrc_category, detect_report_date
 from src.core.extractor import extract_text, read_text
 from src.core.logger import log_exception
+from src.core.render import render_pdf_webp
 from src.core.writer import write_output
 from src.models.result import ParsedResult
 
@@ -100,6 +101,15 @@ class COAParser:
                 result.output_path = str(output_path)
             except Exception:
                 logger.error("Failed to write output for %s", path.name)
+                log_exception()
+
+        if output_dir is not None and result.output_path is not None:
+            try:
+                webp_path = render_pdf_webp(path, Path(output_dir) / f"{Path(result.output_path).stem}.webp")
+                if webp_path is not None:
+                    result.webp_path = str(webp_path)
+            except Exception:
+                logger.warning("Failed to render WEBP for %s", path.name)
                 log_exception()
 
         return result
