@@ -38,8 +38,8 @@ class DatabaseOutputTab(QWidget):
         layout.addWidget(title)
 
         desc = QLabel(
-            "Combine every parsed text output in the Output folder into a "
-            "single compressed .zip file."
+            "Combine every parsed text and image output in the Output folder "
+            "into a single compressed .zip file."
         )
         desc.setWordWrap(True)
         desc.setStyleSheet("color: #555;")
@@ -71,7 +71,7 @@ class DatabaseOutputTab(QWidget):
     def _refresh_file_count(self) -> None:
         files = find_output_files(OUTPUT_DIR)
         self._file_count_label.setText(
-            f"{len(files)} text output(s) found in the Output folder."
+            f"{len(files)} output(s) found in the Output folder."
         )
 
     def _create_zip(self) -> None:
@@ -83,7 +83,7 @@ class DatabaseOutputTab(QWidget):
         files = find_output_files(OUTPUT_DIR)
         if not files:
             QMessageBox.information(
-                self, "No Outputs", "No text outputs found in the Output folder."
+                self, "No Outputs", "No outputs found in the Output folder."
             )
             return
 

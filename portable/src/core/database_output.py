@@ -1,4 +1,4 @@
-"""Database output helpers: bundle all parsed text outputs into one ZIP file."""
+"""Database output helpers: bundle all parsed text and image outputs into one ZIP file."""
 
 from __future__ import annotations
 
@@ -13,12 +13,12 @@ def default_database_name() -> str:
 
 
 def find_output_files(output_dir: str | Path) -> list[Path]:
-    """Return every .txt output file in the output directory, sorted by name."""
-    return sorted(Path(output_dir).glob("*.txt"))
+    """Return every parse output file (.txt text, .webp image) in the output directory."""
+    return sorted([*Path(output_dir).glob("*.txt"), *Path(output_dir).glob("*.webp")])
 
 
 def create_database_zip(output_dir: str | Path, zip_path: str | Path) -> tuple[int, Path]:
-    """Zip all .txt outputs under output_dir into zip_path.
+    """Zip all .txt and .webp outputs under output_dir into zip_path.
 
     Files are stored at the ZIP root under their original names. A .zip
     extension is appended if the target has none.
