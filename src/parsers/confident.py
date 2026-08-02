@@ -179,6 +179,14 @@ class ConfidentParser(BaseParser):
                         _saw_pct_header = True
                     if is_terpene and "ppm" in ahead_lower:
                         found_ppm = True
+                    if re.search(r"\bmg/g\b", ahead_lower):
+                        # 'Result %' and 'Result mg/g' columns: the % value is the
+                        # FIRST numeric in each row (mg/g is the second, 10x larger)
+                        # when no LOD/LOQ data column precedes it.
+                        if _saw_pct_header and result_index == 2:
+                            result_index = 1
+                        elif not _saw_pct_header:
+                            _has_mass_column = True
                     if ahead_lower == "mass":
                         _has_mass_column = True
                     if re.match(r"^result\s*\(%\)", ahead_lower):
