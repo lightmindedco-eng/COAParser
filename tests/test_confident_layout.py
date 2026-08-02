@@ -122,3 +122,44 @@ def test_confident_lod_layout_uses_front_index() -> None:
     assert "Delta-9-THC: 85.45%" in items
     assert "Delta-9-THC: 854.5%" not in items
     assert "Delta-9-THC: 30000.00%" not in items
+
+
+def test_confident_deglues_glued_decimal_cells() -> None:
+    """Old Confident text layers merge adjacent table cells (LOQ + result +
+    PPM) into a single token like '0.0020.873 8727.992'. The parser must
+    split those into their constituent 3-decimal numbers instead of reading
+    the mis-merged middle digits (e.g. '873' -> 95/873 which would then be
+    wrongly treated as ppm and divided by 10000)."""
+    lines = [
+        "Terpenes",
+        "Analyte",
+        "LOQ Mass",
+        "Mass",
+        "%",
+        "%",
+        "PPM",
+        "Terpinolene",
+        "0.0020.873 8727.992",
+        "beta-Pinene",
+        "0.0020.095",
+        "954.409",
+        "Farnesene",
+        "0.0020.075",
+        "753.504",
+        "Caryophyllene Oxide 0.0020.016",
+        "155.197",
+        "beta-Myrcene",
+        "0.002 0.5395393.110",
+    ]
+
+    parser = ConfidentParser()
+    result = parser.parse(lines)
+    items = result["items"]
+
+    assert "Terpinolene: 0.873%" in items
+    assert "Terpinolene: 0.0873%" not in items
+    assert "beta-Pinene: 0.095%" in items
+    assert "beta-Pinene: 095%" not in items
+    assert "Farnesene: 0.075%" in items
+    assert "Caryophyllene Oxide: 0.016%" in items
+    assert "beta-Myrcene: 0.539%" in items

@@ -9,9 +9,44 @@ from .base import BaseParser
 
 logger = logging.getLogger(__name__)
 
+_GLUED_RUN_RE = re.compile(r"\d+\.\d+\.\d+(?:\.\d+)*")
+
 
 class ConfidentParser(BaseParser):
     name = "confident"
+
+    @staticmethod
+    def _deglue_numbers(token: str) -> list[str]:
+        """Split a glued numeric token into its constituent numbers.
+
+        Old Confident text layers merge adjacent table cells with no
+        separator (e.g. ``0.0020.095`` is LOQ ``0.002`` plus value
+        ``0.095``, or ``0.5395393.110`` is value ``0.539`` plus PPM
+        ``5393.110``).  Table values are 3-decimal numbers, so each
+        interior digit run splits as 3 digits + rest.  Tokens that do not
+        look like this (dates, batch ids) are returned unchanged.
+        """
+        runs = token.split(".")
+        if len(runs) < 3 or any(not r for r in runs):
+            return [token]
+        if any(len(r) < 3 for r in runs[1:-1]):
+            return [token]
+        numbers: list[str] = []
+        tail = runs[0]
+        for r in runs[1:-1]:
+            numbers.append(f"{tail}.{r[:3]}")
+            tail = r[3:]
+        numbers.append(f"{tail}.{runs[-1]}")
+        if any("." not in n or not re.fullmatch(r"\d+(?:\.\d+)?", n) for n in numbers):
+            return [token]
+        return numbers
+
+    @staticmethod
+    def _expand_glued(line: str) -> str:
+        """Space-separate glued decimals so inline value extraction sees them."""
+        return _GLUED_RUN_RE.sub(
+            lambda m: " ".join(ConfidentParser._deglue_numbers(m.group(0))), line
+        )
 
     @staticmethod
     def _normalize_name(name: str) -> str:
@@ -329,7 +364,7 @@ class ConfidentParser(BaseParser):
 
             if value is None and not below_loq:
                 is_date_line = re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", raw_line)
-                inline_matches = [] if is_date_line else inline_values_re.findall(raw_line)
+                inline_matches = [] if is_date_line else inline_values_re.findall(self._expand_glued(raw_line))
 
                 result_values: list[str] = []
                 _inline_max = 99999.99 if (_ppm_mode or _section_type == "terpenes" or _4col_mode) else 999.99
@@ -407,7 +442,7 @@ class ConfidentParser(BaseParser):
                             got_value = True
                             break
                     else:
-                        inline_nums = inline_values_re.findall(candidate_line)
+                        inline_nums = inline_values_re.findall(self._expand_glued(candidate_line))
                         for num_str in inline_nums:
                             num = float(num_str)
                             max_val = 99999.99 if (mg_unit_mode or _ppm_mode or _section_type == "terpenes" or _4col_mode) else 999.99
