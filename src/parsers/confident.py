@@ -165,6 +165,7 @@ class ConfidentParser(BaseParser):
                 found_ppm = False
                 _saw_pct_header = False
                 _has_mass_column = False
+                _mg_g_col = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower) or re.search(r"(?<!\w)lod(?!\w)", ahead_lower):
@@ -180,11 +181,13 @@ class ConfidentParser(BaseParser):
                     if is_terpene and "ppm" in ahead_lower:
                         found_ppm = True
                     if re.search(r"\bmg/g\b", ahead_lower):
-                        # 'Result %' and 'Result mg/g' columns: the % value is the
-                        # FIRST numeric in each row (mg/g is the second, 10x larger)
-                        # when no LOD/LOQ data column precedes it.
-                        if _saw_pct_header and result_index == 2:
-                            result_index = 1
+                        # 'Result %' and 'Result mg/g' columns. The mg/g column is
+                        # always the LAST numeric; the % column sits immediately
+                        # before it, so the % value is the second-to-last numeric
+                        # of each row (see row parsing below). With an LOD column
+                        # the leading count is fixed (3), so front-indexing applies.
+                        if _saw_pct_header and result_index != 3:
+                            _mg_g_col = True
                         elif not _saw_pct_header:
                             _has_mass_column = True
                     if ahead_lower == "mass":
@@ -321,7 +324,11 @@ class ConfidentParser(BaseParser):
                                 result_values.append(num_str)
 
                 if result_values:
-                    if len(result_values) >= result_index:
+                    if _mg_g_col and len(result_values) >= 2:
+                        # [%, mg/g] rows have 2 numerics; [LOQ, %, mg/g] rows have 3+
+                        idx = 1 if len(result_values) >= 3 else 0
+                        value = f"{result_values[idx]}%"
+                    elif len(result_values) >= result_index:
                         value = f"{result_values[result_index - 1]}%"
                     elif len(result_values) == 1:
                         single_ahead_nd = False
@@ -343,11 +350,14 @@ class ConfidentParser(BaseParser):
                             value = f"{result_values[0]}%"
 
             if value is None and not below_loq:
-                # Multi-line look-ahead: scan following lines for numeric values,
-                # using result_index to pick the correct column. Stop at next compound.
+                # Multi-line look-ahead: scan following lines for numeric values.
+                # With an mg/g column the % is the second-to-last numeric of the
+                # row, so collect every numeric until the row ends. Otherwise use
+                # result_index to pick the correct column. Stop at next compound.
                 ahead = [lines[i + j].strip() if i + j < len(lines) else "" for j in range(1, 13)]
                 numeric_count = 0
                 got_value = False
+                row_nums: list[str] = []
                 for candidate_line in ahead:
                     if nd_re.match(candidate_line):
                         value = "ND"
@@ -374,7 +384,8 @@ class ConfidentParser(BaseParser):
                     m_num = number_re.match(candidate_line)
                     if m_num:
                         numeric_count += 1
-                        if numeric_count == result_index:
+                        row_nums.append(m_num.group(1))
+                        if not _mg_g_col and numeric_count == result_index:
                             value = f"{m_num.group(1)}%"
                             got_value = True
                             break
@@ -386,12 +397,19 @@ class ConfidentParser(BaseParser):
                             if "." in num_str or int(num) >= 10:
                                 if num <= max_val:
                                     numeric_count += 1
-                                    if numeric_count == result_index:
+                                    row_nums.append(num_str)
+                                    if not _mg_g_col and numeric_count == result_index:
                                         value = f"{num_str}%"
                                         got_value = True
                                         break
                         if got_value:
                             break
+                if _mg_g_col and not got_value and len(row_nums) >= 2:
+                    # [%, mg/g] rows have 2 numerics; [LOQ, %, mg/g] rows have 3+.
+                    # Front-indexing is robust when unrecognized intermediate
+                    # compounds merge their numbers into this row.
+                    idx = 1 if len(row_nums) >= 3 else 0
+                    value = f"{row_nums[idx]}%"
 
             seen.add(matched.lower())
             if value == "ND" or below_loq:
