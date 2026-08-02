@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from src.core.detector import detect_product_name
 from src.core.extractor import read_text
 from src.parser import COAParser
 
@@ -72,3 +73,16 @@ def test_parse_file_writes_matching_webp_for_pdf(tmp_path: Path) -> None:
     image = Image.open(webp_path)
     assert image.format == "WEBP"
     assert image.width > 0 and image.height > 0
+
+
+def test_detect_product_name_keeps_pipe_flavors() -> None:
+    """A 'Sample Name:' like 'DELIGHT | TRUFFLE CAKE' must keep the pipe-delimited
+    flavor instead of truncating to just 'DELIGHT'."""
+    lines = ["Certificate of Analysis", "Sample Name: DELIGHT | TRUFFLE CAKE", "Type: Vape Cartridges"]
+    assert detect_product_name(lines) == "Delight | Truffle Cake"
+
+
+def test_detect_product_name_strips_glued_metadata_pipe() -> None:
+    """A pipe suffix that is metadata (e.g. '| Sample #: 1046') is still stripped."""
+    lines = ["Certificate of Analysis", "Sample Name: Snow Monkey Bulk | Sample #: 1046", "Type: Bulk Concentrate"]
+    assert detect_product_name(lines) == "Snow Monkey Bulk"

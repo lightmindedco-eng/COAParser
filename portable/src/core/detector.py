@@ -57,7 +57,12 @@ def detect_product_name(lines: list[str]) -> str | None:
             if len(parts) == 2:
                 product_name = parts[1].strip()
                 if "|" in product_name:
-                    product_name = product_name.split("|")[0].strip()
+                    suffix = product_name.split("|", 1)[1].strip()
+                    # Only strip pipe suffixes that are metadata (e.g. a glued
+                    # "| Sample #: 712"), never product/flavor names like
+                    # "DELIGHT | TRUFFLE CAKE".
+                    if re.match(r"^(sample\s*#|batch|manifest|metrc|license|report\s*#|id\b)", suffix, re.IGNORECASE):
+                        product_name = product_name.split("|")[0].strip()
                 if len(product_name) > 3 and len(product_name) < 250:
                     return _clean_product_name(product_name)
 
