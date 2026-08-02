@@ -28,23 +28,23 @@ class _BarRow(QWidget):
     def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False, mg: float | None = None, unit: str = "", val_unit: str | None = None) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 1, 0, 1)
-        layout.setSpacing(6)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
 
         name_label = QLabel(name)
-        name_label.setMinimumWidth(100)
-        name_label.setStyleSheet(f"font-size: 12px; font-weight: {'600' if bold else '400'};")
+        name_label.setMinimumWidth(90)
+        name_label.setStyleSheet(f"font-size: 11px; font-weight: {'600' if bold else '400'};")
         layout.addWidget(name_label)
 
         track = QFrame()
-        track.setFixedHeight(22)
+        track.setFixedHeight(12)
         track.setStyleSheet("background-color: transparent;")
         track_layout = QHBoxLayout(track)
         track_layout.setContentsMargins(0, 0, 0, 0)
         track_layout.setSpacing(0)
 
         bar = QFrame()
-        bar.setFixedHeight(22)
+        bar.setFixedHeight(12)
         bar.setStyleSheet(f"""
             background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 {color}, stop:1 {color});
@@ -72,8 +72,8 @@ class _BarRow(QWidget):
             val_label = QLabel(f"{value:.3f}%  ({mg:.3f} {unit})")
         else:
             val_label = QLabel(f"{value:.3f}%")
-        val_label.setStyleSheet("font-size: 12px;")
-        val_label.setMinimumWidth(80)
+        val_label.setStyleSheet("font-size: 11px;")
+        val_label.setMinimumWidth(70)
         val_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(val_label)
 
@@ -86,7 +86,7 @@ class _Section(QWidget):
         layout.setSpacing(0)
 
         header = QLabel(title)
-        header.setStyleSheet("font-size: 14px; font-weight: 700; margin-top: 12px; margin-bottom: 4px;")
+        header.setStyleSheet("font-size: 12px; font-weight: 700; margin-top: 6px; margin-bottom: 2px;")
         layout.addWidget(header)
 
         separator = QFrame()
@@ -209,8 +209,8 @@ class VisualOutputWidget(QScrollArea):
         self.setWidgetResizable(True)
         self._content = QWidget()
         self._layout = QVBoxLayout(self._content)
-        self._layout.setContentsMargins(16, 12, 16, 12)
-        self._layout.setSpacing(2)
+        self._layout.setContentsMargins(16, 8, 16, 8)
+        self._layout.setSpacing(0)
         self.setWidget(self._content)
 
         self._info_grid: QWidget | None = None
@@ -225,8 +225,8 @@ class VisualOutputWidget(QScrollArea):
 
         self._content = QWidget()
         self._layout = QVBoxLayout(self._content)
-        self._layout.setContentsMargins(16, 12, 16, 12)
-        self._layout.setSpacing(2)
+        self._layout.setContentsMargins(16, 8, 16, 8)
+        self._layout.setSpacing(0)
         self.setWidget(self._content)
 
         meta = result.metadata
