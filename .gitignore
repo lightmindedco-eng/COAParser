@@ -31,3 +31,7 @@ batch_summary.json
 _dumps/
 stderr.txt
 stdout.txt
+
+# Generated database exports
+COA_Database_*.zip
+Database Outputs/
