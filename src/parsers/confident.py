@@ -166,6 +166,8 @@ class ConfidentParser(BaseParser):
                 _saw_pct_header = False
                 _has_mass_column = False
                 _mg_g_col = False
+                _has_pct_col = False
+                _has_mg_unit_col = False
                 for j in range(1, min(20, len(lines) - i)):
                     ahead_lower = lines[i + j].strip().lower()
                     if re.match(r"^lod\b", ahead_lower) or re.search(r"(?<!\w)lod(?!\w)", ahead_lower):
@@ -176,8 +178,15 @@ class ConfidentParser(BaseParser):
                         pass
                     if "mg/unit" in ahead_lower and "%" not in ahead_lower:
                         mg_unit_mode = True
+                    if "mg/unit" in ahead_lower:
+                        _has_mg_unit_col = True
                     if "%" in ahead_lower or re.search(r"\bmass\b", ahead_lower):
                         _saw_pct_header = True
+                    # A genuine "%" column header (a bare % or "Result (%)" token, not a
+                    # value line like "81.179%"). When present the rows carry real
+                    # percentages, so the mass-relative mg_unit_mode must not apply.
+                    if "%" in ahead_lower and not re.search(r"\d", ahead_lower):
+                        _has_pct_col = True
                     if is_terpene and "ppm" in ahead_lower:
                         found_ppm = True
                     if re.search(r"\bmg/g\b", ahead_lower):
@@ -186,9 +195,9 @@ class ConfidentParser(BaseParser):
                         # before it, so the % value is the second-to-last numeric
                         # of each row (see row parsing below). With an LOD column
                         # the leading count is fixed (3), so front-indexing applies.
-                        if _saw_pct_header and result_index != 3:
+                        if _has_pct_col and result_index != 3:
                             _mg_g_col = True
-                        elif not _saw_pct_header:
+                        elif not _has_pct_col:
                             _has_mass_column = True
                     if ahead_lower == "mass":
                         _has_mass_column = True
@@ -207,7 +216,15 @@ class ConfidentParser(BaseParser):
                     pass
                 if is_terpene and found_ppm and not _saw_pct_header:
                     _ppm_mode = True
-                if _has_mass_column:
+                # Only compute mass-relative percentages when the section has NO
+                # genuine "%" column. With a real % column the row values are
+                # already percentages and mg_unit_mode would recompute them wrong.
+                if _has_pct_col:
+                    mg_unit_mode = False
+                elif _has_mg_unit_col:
+                    mg_unit_mode = True
+                    _mg_unit_str = "mg/unit"
+                elif _has_mass_column:
                     mg_unit_mode = True
                     _mg_unit_str = "mg/g"
 
