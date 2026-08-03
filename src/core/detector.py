@@ -88,12 +88,15 @@ def detect_product_name(lines: list[str]) -> str | None:
         if not stripped or len(stripped) < 15:
             continue
         # Skip labeled lines (colon in first 25 chars is a label prefix like "Strain: Peach")
-        # but keep lines where colon is in compound ratio notation (e.g. "THC:CBD")
+        # but keep lines where the colon is part of a potency ratio (e.g. "25:5mg ...")
         colon_pos = stripped.find(":")
-        if colon_pos >= 0 and colon_pos < 25:
+        if colon_pos >= 0 and colon_pos < 25 and not re.search(r"\d\s*:\s*\d", stripped[: colon_pos + 2]):
             continue
-        # Match lines with mg + THC/CBD keyword (standard format)
-        if re.search(r"\b\d+\s*mg\b", stripped, re.IGNORECASE) and re.search(r"\b(thc|cbd)\b", stripped, re.IGNORECASE):
+        # Match lines with mg + THC/CBD keyword (standard format), or mg + dash
+        # separator for products without a potency keyword (e.g. "WL Mango Chili 100mg - Individual")
+        if re.search(r"\b\d+\s*mg\b", stripped, re.IGNORECASE) and (
+            re.search(r"\b(thc|cbd)\b", stripped, re.IGNORECASE) or " - " in stripped
+        ):
             if not re.match(r"^[\d\s/\-:.,()%]+$", stripped):
                 return _clean_product_name(stripped)
         # Also match dash-separated product names with weight in parentheses (e.g., "Flower & Buds - Bittersweet - (g)")
@@ -149,7 +152,7 @@ def detect_product_name(lines: list[str]) -> str | None:
                     next_line = lines[k].strip()
                     if not next_line or ":" in next_line:
                         break
-                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate|client|produced|amended|collection|completed|summary|cannabinoid|terpene|pesticide|solvent|microbial|moisture|mycotoxin|pass|fail|water\s+activity|heavy\s+metal|foreign)", next_line, re.IGNORECASE):
+                    if re.match(r"^(metrc|batch|harvest|production|laboratory|license|report|primary|sample|plant,|concentrate|client|produced|amended|collection|completed|summary|cannabinoid|terpene|pesticide|solvent|microbial|moisture|mycotoxin|pass|fail|water\s+activity|heavy\s+metal|foreign|ingestible|topical|edible|vape\b|tincture|capsule|pre-roll|preroll|kief|shake|soft\s+chew)", next_line, re.IGNORECASE):
                         break
                     # Stop at company names (all caps, 2+ words), addresses, or emails
                     if re.match(r"^[A-Z][A-Z\s]+$", next_line) and len(next_line.split()) >= 2:

@@ -86,3 +86,59 @@ def test_detect_product_name_strips_glued_metadata_pipe() -> None:
     """A pipe suffix that is metadata (e.g. '| Sample #: 1046') is still stripped."""
     lines = ["Certificate of Analysis", "Sample Name: Snow Monkey Bulk | Sample #: 1046", "Type: Bulk Concentrate"]
     assert detect_product_name(lines) == "Snow Monkey Bulk"
+
+
+def test_detect_product_name_metis_mg_dash_no_potency_keyword() -> None:
+    """Metis QA product line with mg potency + dash but no THC/CBD keyword must be
+    returned instead of the Client/license/address block."""
+    lines = [
+        "Regulatory Compliance Testing", "1 of 2", "Metis QA Laboratory",
+        "10001 Broadway Extension", "Oklahoma City, OK 73114", "(405) 605-0952",
+        "https://www.metisqalab.com/", "Lic# LAAA-LTKC-8XIM",
+        "WL Mango Chili 100mg - Individual",
+        "METRC Sample: 1A40E0100004B19000045324; METRC Batch: 1A40E0100004B19000045297",
+        "Sample ID: 2501DML0005.0014", "Strain: Mango Chili", "Matrix: Ingestible",
+        "Type: Soft Chew", "Sample Size: 1 units; Batch:", "Completed: 01/08/2025",
+        "Batch#: WLG-MC-100-02", "Client", "JKJ PROCESSING INC",
+        "Lic. # PAAA-4JJF-VKHP", "4301 WILL ROGERS PKWY", "OKLAHOMA CITY, OK 73108",
+        "Cannabinoids", "Complete", "Analyte", "LOQ", "Result", "%", "mg/g",
+    ]
+    assert detect_product_name(lines) == "WL Mango Chili 100mg - Individual"
+
+
+def test_detect_product_name_mg_dash_without_potency_keyword() -> None:
+    """Product line with mg potency + dash separator but no THC/CBD keyword is caught
+    before the Strain look-ahead can append the METRC category line."""
+    lines = [
+        "Certificate of Analysis", "Powered by Confident LIMS", "1 of 2", "Some Labs LLC",
+        "LM | Mango - 250mg", "Ingestible, Soft Chew", "Strain: Mango",
+        "Batch#: MM-1", "METRC Sample: X; METRC Source: Y", "Cannabinoids", "Complete",
+    ]
+    assert detect_product_name(lines) == "LM | Mango - 250mg"
+
+
+def test_detect_product_name_ratio_potency_colon() -> None:
+    """A potency-ratio colon early in the line (e.g. '25:5mg ...') must not be treated
+    as a label prefix, so the full product line is returned."""
+    lines = [
+        "Certificate of Analysis", "Powered by Confident LIMS", "1 of 2", "OPERATING MFG, LLC",
+        "Sample: 2511OKCTL3416.29166",
+        "25:5mg Watermelon THC Gummies (50: 10mg | 500:100mg Packs)",
+        "Strain: Watermelon", "Ingestible, Soft Chew;", "Sample Weight: 20 units",
+        "Cannabinoids", "Complete",
+    ]
+    assert detect_product_name(lines) == "25:5mg Watermelon THC Gummies (50: 10mg | 500:100mg Packs)"
+
+
+def test_detect_product_name_does_not_join_metrc_category() -> None:
+    """Pass 3 look-ahead must stop at a METRC category line ('Ingestible, ...') instead
+    of appending it to the product name."""
+    lines = [
+        "Certificate of Analysis", "Powered by Confident LIMS", "1 of 2", "TPC Holdings LLC",
+        "Sample: 2601SL0154.0942", "Strain: Benevolent Bakery | Wake N Bake Pancake Mix | 13 oz",
+        "Batch#: BB.PANCAKE.1000.OK.001; Harvest Process Lot:", "Primary Sample Weight: 1 units",
+        "Benevolent Bakery | Wake N Bake Pancake Mix | 13 oz", "Ingestible, Baked Goods",
+        "METRC Sample: 1A40E01000020EC000010705; METRC Source: 1A40E01000020EC000009870",
+        "Cannabinoids", "Analytical Date: 01/30/2026; Analyst: ehs",
+    ]
+    assert detect_product_name(lines) == "Benevolent Bakery | Wake N Bake Pancake Mix | 13 oz"
