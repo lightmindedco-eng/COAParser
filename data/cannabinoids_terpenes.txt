@@ -54,3 +54,5 @@ Myrcene = beta-Myrcene
 Limonene = d-Limonene
 Nerolidol = trans-Nerolidol
 Ocimene = beta-Ocimene
+d8-THC = Delta-8-THC
+d9-THC = Delta-9-THC
