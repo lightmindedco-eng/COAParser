@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('data/cannabinoids_terpenes.txt', 'data')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

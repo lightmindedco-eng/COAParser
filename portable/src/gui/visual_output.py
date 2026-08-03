@@ -1,19 +1,12 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QFontMetricsF, QLinearGradient, QPainter, QPen
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
+from src.core.compound_profiles import get_color, get_effects
 from src.models.result import ParsedResult
 
 
@@ -24,89 +17,215 @@ def _strip_name(name: str) -> str:
     return name
 
 
-class _BarRow(QWidget):
-    def __init__(self, name: str, value: float, pct_of_max: float, color: str, bold: bool = False, mg: float | None = None, unit: str = "", val_unit: str | None = None) -> None:
-        super().__init__()
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+class _BarChart(QWidget):
+    """Horizontal bar chart with one row per compound.
 
-        name_label = QLabel(name)
-        name_label.setMinimumWidth(90)
-        name_label.setStyleSheet(f"font-size: 11px; font-weight: {'600' if bold else '400'};")
-        layout.addWidget(name_label)
+    Colors come from the single source of truth (data/cannabinoids_terpenes.txt)
+    via src.core.compound_profiles; effects are shown as a subtitle under each
+    name and in the row tooltip.
+    """
 
-        track = QFrame()
-        track.setFixedHeight(12)
-        track.setStyleSheet("background-color: transparent;")
-        track_layout = QHBoxLayout(track)
-        track_layout.setContentsMargins(0, 0, 0, 0)
-        track_layout.setSpacing(0)
+    _MARGIN = 12
+    _ROW_GAP = 4
 
-        bar = QFrame()
-        bar.setFixedHeight(12)
-        bar.setStyleSheet(f"""
-            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {color}, stop:1 {color});
-            border-radius: 3px;
-        """)
-        track_layout.addWidget(bar)
+    def __init__(self, title: str, items: list[tuple[str, float, str | None, str, float | None, str | None]], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._title = title
+        self._max_val = max((v for _, v, _, _, _, _ in items), default=0.0)
+        self._rows = [self._make_row(*item) for item in items]
 
-        if pct_of_max < 1.0:
-            filler = QWidget()
-            filler.setStyleSheet("background-color: transparent;")
-            track_layout.addWidget(filler)
-            bar_stretch = max(1, int(pct_of_max * 700))
-            filler_stretch = max(300, 1000 - bar_stretch)
-            track_layout.setStretchFactor(bar, bar_stretch)
-            track_layout.setStretchFactor(filler, filler_stretch)
+        self._name_font = QFont()
+        self._name_font.setPixelSize(11)
+        self._value_font = QFont(self._name_font)
+        self._value_font.setBold(True)
+        self._sub_font = QFont(self._name_font)
+        self._sub_font.setPixelSize(9)
+        self._title_font = QFont()
+        self._title_font.setPixelSize(12)
+        self._title_font.setBold(True)
 
-        layout.addWidget(track, stretch=1)
+        self._left_col = self._measure_left_col()
+        self._right_col = max(
+            (QFontMetricsF(self._value_font).horizontalAdvance(row["value_text"])
+             for row in self._rows),
+            default=0.0,
+        ) + 8.0
+        self._row_height = max(
+            (QFontMetricsF(self._name_font).height()
+             + (QFontMetricsF(self._sub_font).height() if (row["effects_text"] or row["sub_text"]) else 0)
+             for row in self._rows),
+            default=18.0,
+        ) + 6.0
+
+        self.setMinimumHeight(int(self._content_height()))
+        self.setMouseTracking(True)
+        self._hover_row: int | None = None
+
+    def _make_row(self, name: str, value: float, val_unit: str | None, kind: str, mg: float | None, unit: str | None) -> dict:
+        is_total = name.lower().startswith("total ")
+        color = get_color(name) or _get_color(name, kind == "terpene")
+        if is_total:
+            color = "#37474F"
+        effects = get_effects(name)
 
         if val_unit:
-            if mg is not None:
-                val_label = QLabel(f"{value:.3f} {val_unit}  ({mg:.3f} {unit})")
-            else:
-                val_label = QLabel(f"{value:.3f} {val_unit}")
-        elif mg is not None:
-            val_label = QLabel(f"{value:.3f}%  ({mg:.3f} {unit})")
+            value_text = f"{value:.3f} {val_unit}"
         else:
-            val_label = QLabel(f"{value:.3f}%")
-        val_label.setStyleSheet("font-size: 11px;")
-        val_label.setMinimumWidth(70)
-        val_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        layout.addWidget(val_label)
+            value_text = f"{value:.3f}%"
+        sub_text = f"{mg:.3f} {unit}" if mg is not None else ""
 
+        return {
+            "name": name,
+            "value": value,
+            "kind": kind,
+            "mg": mg,
+            "unit": unit or "",
+            "val_unit": val_unit,
+            "color": color,
+            "is_total": is_total,
+            "effects_text": ", ".join(effects),
+            "value_text": value_text,
+            "sub_text": sub_text,
+        }
 
-class _Section(QWidget):
-    def __init__(self, title: str, items: list[tuple[str, float, str | None, str, float | None, str | None]], total_name: str | None = None) -> None:
-        super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+    def _measure_left_col(self) -> float:
+        metrics = QFontMetricsF(self._name_font)
+        widths = [metrics.horizontalAdvance(row["name"]) for row in self._rows]
+        return (max(widths) if widths else 60.0) + 12.0
 
-        header = QLabel(title)
-        header.setStyleSheet("font-size: 12px; font-weight: 700; margin-top: 6px; margin-bottom: 2px;")
-        layout.addWidget(header)
+    def _content_height(self) -> float:
+        return 26 + 8 + sum(self._row_height + self._ROW_GAP for _ in self._rows) + 4
 
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setStyleSheet("background-color: #ccc; max-height: 1px;")
-        layout.addWidget(separator)
+    def sizeHint(self) -> QSize:
+        return QSize(520, int(self._content_height()))
 
-        if not items:
-            empty = QLabel("No compounds detected.")
-            empty.setStyleSheet("font-size: 12px; color: #888; margin: 8px 0;")
-            layout.addWidget(empty)
+    def _bar_rect(self, width: float, top: float) -> QRectF:
+        x0 = self._MARGIN + self._left_col
+        x1 = width - self._MARGIN - self._right_col
+        return QRectF(x0, top, max(1.0, x1 - x0), self._row_height)
+
+    def paintEvent(self, event: "object") -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        painter.setFont(self._title_font)
+        painter.setPen(QColor("#222"))
+        painter.drawText(QRectF(self._MARGIN, 6, self.width() - 2 * self._MARGIN, 20), Qt.AlignLeft | Qt.AlignVCenter, self._title)
+
+        y = 26 + 8
+        bar_area = self._bar_rect(self.width(), y)
+
+        if not self._rows:
+            painter.setFont(self._name_font)
+            painter.setPen(QColor("#888"))
+            painter.drawText(QRectF(bar_area.left(), y, bar_area.width(), 20), Qt.AlignLeft | Qt.AlignVCenter, "No compounds detected.")
             return
 
-        max_val = max(v for _, v, _, _, _, _ in items)
-        for name, val, val_unit, compound_type, mg, unit in items:
-            is_total = name.lower().startswith("total ")
-            is_terp = compound_type == "terpene"
-            color = _get_color(name, is_terp)
-            bar = _BarRow(name, val, val / max_val if max_val > 0 else 0, color, bold=is_total, mg=mg, unit=unit or "", val_unit=val_unit)
-            layout.addWidget(bar)
+        # gridlines
+        if self._max_val > 0:
+            grid_pen = QPen(QColor("#e2e2e2"))
+            grid_pen.setWidthF(1.0)
+            painter.setPen(grid_pen)
+            for frac in (0.25, 0.5, 0.75, 1.0):
+                gx = bar_area.left() + bar_area.width() * frac
+                painter.drawLine(QPointF(gx, bar_area.top() - 2), QPointF(gx, bar_area.bottom() + 2))
+
+        baseline = QPen(QColor("#b0b0b0"))
+        baseline.setWidthF(1.0)
+        painter.setPen(baseline)
+        painter.drawLine(QPointF(bar_area.left(), bar_area.top() - 2), QPointF(bar_area.left(), bar_area.bottom() + 2))
+
+        row_idx = 0
+        for row in self._rows:
+            top = y + self._row_height * row_idx + self._ROW_GAP * row_idx
+            name_metrics = QFontMetricsF(self._name_font)
+            sub_metrics = QFontMetricsF(self._sub_font)
+
+            painter.setFont(self._name_font)
+            painter.setPen(QColor("#222"))
+            painter.drawText(QRectF(self._MARGIN, top, self._left_col, name_metrics.height()),
+                             Qt.AlignLeft | Qt.AlignVCenter, row["name"])
+
+            bar_rect = self._bar_rect(self.width(), top)
+            bar_height = self._row_height - 4.0
+            bar_rect.setTop(bar_rect.top() + 2.0)
+            bar_rect.setHeight(bar_height)
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor("#efefef"))
+            painter.drawRoundedRect(bar_rect, 3.0, 3.0)
+
+            if self._max_val > 0 and row["value"] > 0:
+                fill_width = bar_rect.width() * (row["value"] / self._max_val)
+                fill = QRectF(bar_rect.left(), bar_rect.top(), max(2.0, fill_width), bar_rect.height())
+                base_color = QColor(row["color"])
+                gradient = QLinearGradient(fill.topLeft(), fill.topRight())
+                gradient.setColorAt(0.0, base_color.lighter(112))
+                gradient.setColorAt(1.0, base_color)
+                painter.setBrush(gradient)
+                painter.drawRoundedRect(fill, 3.0, 3.0)
+                if row["is_total"]:
+                    pen = QPen(base_color.darker(135))
+                    pen.setWidthF(1.2)
+                    painter.setPen(pen)
+                    painter.drawRoundedRect(fill, 3.0, 3.0)
+
+            sub = ""
+            if row["effects_text"]:
+                sub = row["effects_text"]
+            elif row["sub_text"]:
+                sub = row["sub_text"]
+
+            if sub:
+                painter.setFont(self._sub_font)
+                painter.setPen(QColor("#8a8a8a"))
+                if row["effects_text"]:
+                    max_effects_w = bar_rect.right() - self._MARGIN
+                    sub = QFontMetricsF(self._sub_font).elidedText(row["effects_text"], Qt.ElideRight, int(max_effects_w))
+                painter.drawText(QRectF(self._MARGIN, top + name_metrics.height(), self._left_col, sub_metrics.height()),
+                                 Qt.AlignLeft | Qt.AlignVCenter, sub)
+
+            painter.setFont(self._value_font)
+            painter.setPen(QColor("#333"))
+            value_rect = QRectF(self.width() - self._MARGIN - self._right_col, top, self._right_col, name_metrics.height())
+            painter.drawText(value_rect, Qt.AlignRight | Qt.AlignVCenter, row["value_text"])
+
+            if row["sub_text"] and row["effects_text"]:
+                painter.setFont(self._sub_font)
+                painter.setPen(QColor("#8a8a8a"))
+                painter.drawText(QRectF(self.width() - self._MARGIN - self._right_col, top + name_metrics.height(),
+                                        self._right_col, sub_metrics.height()),
+                                 Qt.AlignRight | Qt.AlignVCenter, row["sub_text"])
+
+            row_idx += 1
+
+        painter.end()
+
+    def _row_at(self, y: float) -> int | None:
+        if not self._rows:
+            return None
+        start = 26 + 8
+        for idx in range(len(self._rows)):
+            row_top = start + idx * (self._row_height + self._ROW_GAP)
+            if row_top <= y <= row_top + self._row_height:
+                return idx
+        return None
+
+    def mouseMoveEvent(self, event: "object") -> None:
+        idx = self._row_at(event.position().y())
+        if idx != self._hover_row:
+            self._hover_row = idx
+            if idx is not None:
+                row = self._rows[idx]
+                lines = [row["name"], row["value_text"]]
+                if row["sub_text"]:
+                    lines.append(row["sub_text"])
+                if row["effects_text"]:
+                    lines.append(row["effects_text"])
+                self.setToolTip("\n".join(lines))
+            else:
+                self.setToolTip("")
+        super().mouseMoveEvent(event)
 
 
 _CANNABIS_COLORS = [
@@ -141,8 +260,6 @@ _CANNABINOID_KEYWORDS = {
     "cbl": "#8E24AA",
     "total": "#37474F",
 }
-
-_TERPENE_KEYWORDS: dict[str, str] = {}
 
 
 def _get_color(name: str, is_terpene: bool) -> str:
@@ -214,8 +331,8 @@ class VisualOutputWidget(QScrollArea):
         self.setWidget(self._content)
 
         self._info_grid: QWidget | None = None
-        self._cannabinoid_section: _Section | None = None
-        self._terpene_section: _Section | None = None
+        self._cannabinoid_section: _BarChart | None = None
+        self._terpene_section: _BarChart | None = None
 
     def display(self, result: ParsedResult, raw_text: str) -> None:
         old = self.takeWidget()
@@ -278,8 +395,10 @@ class VisualOutputWidget(QScrollArea):
         blend_terps = [(n, v, vu, t, mg, u) for n, v, vu, t, mg, u in blend_parsed if t == "terpene"]
         blend_canna.sort(key=sort_key)
         blend_terps.sort(key=sort_key)
-        self._layout.addWidget(_Section("CANNABINOIDS", blend_canna))
-        self._layout.addWidget(_Section("TERPENES", blend_terps))
+        self._cannabinoid_section = _BarChart("CANNABINOIDS", blend_canna)
+        self._layout.addWidget(self._cannabinoid_section)
+        self._terpene_section = _BarChart("TERPENES", blend_terps)
+        self._layout.addWidget(self._terpene_section)
 
         # Sections 2, 3, ...: individual strains from OCR
         strain_groups = result.metadata.get("strain_groups", [])
@@ -296,8 +415,8 @@ class VisualOutputWidget(QScrollArea):
             s_terps.sort(key=sort_key)
 
             if s_canna:
-                self._layout.addWidget(_Section(f"{strain_name} \u2014 Cannabinoids", s_canna))
+                self._layout.addWidget(_BarChart(f"{strain_name} \u2014 Cannabinoids", s_canna))
             if s_terps:
-                self._layout.addWidget(_Section(f"{strain_name} \u2014 Terpenes", s_terps))
+                self._layout.addWidget(_BarChart(f"{strain_name} \u2014 Terpenes", s_terps))
 
         self._layout.addStretch()

@@ -1,0 +1,56 @@
+# Cannabinoids
+CBC = Anti-inflammatory, Pain Relief, Neuroprotective, #F9A825
+CBCA = Precursor (CBC), Anti-inflammatory, Anti-nausea, #42A5F5
+CBD = Calming, Anti-inflammatory, Anti-anxiety, Anticonvulsant, #F9A825
+CBDA = Precursor (CBD), Anti-inflammatory, Anti-nausea, #42A5F5
+CBDV = Neuroprotective, Anticonvulsant, #F9A825
+CBDVA = Precursor (CBDV), #42A5F5
+CBG = Focus, Anti-inflammatory, Antibacterial, #F9A825
+CBGA = Precursor (CBG, CBD, CBDA, THC, THCA, CBC, CBCA), #42A5F5
+CBL = Anti-inflammatory, #6A1B9A
+CBN = Sedating, Calming, #6A1B9A
+CBNA = Precursor (CBN), #42A5F5
+Delta-8-THC = Euphoric, Calming, Appetite Stimulant, Pain Relief, #EF6C00
+Delta-9-THC = Euphoric, Pain Relief, Appetite Stimulant, #EF6C00
+THC = Euphoric, Pain Relief, Appetite Stimulant, #EF6C00
+THCA = Precursor (THC), Anti-inflammatory, #42A5F5
+THCV = Focus, Energizing, Appetite Suppressant, #EF6C00
+THCVa = Precursor (THCV), #42A5F5
+
+# Terpenes
+3-Carene = Focus, Anti-inflammatory, #E6C229
+alpha-Bisabolol = Calming, Anti-inflammatory, #43A047
+alpha-Humulene = Anti-inflammatory, Appetite Suppressant, #7CB342
+alpha-Pinene = Focus, Memory Support, Bronchodilator, #E6C229
+alpha-Terpinene = Antioxidant, #7CB342
+alpha-Terpineol = Calming, Sedating, #9575CD
+beta-Caryophyllene = Anti-inflammatory, Stress Relief, #4CAF50
+beta-Myrcene = Calming, Sedating, #5E35B1
+beta-Ocimene = Uplifting, Decongestant, #F28C28
+beta-Pinene = Focus, Anti-anxiety, #E6C229
+Borneol = Calming, #43A047
+Camphene = Antioxidant, #7CB342
+Caryophyllene Oxide = Anti-inflammatory, #4CAF50
+cis-Ocimene = Uplifting, #F28C28
+d-Limonene = Mood Elevation, Stress Relief, #4CAF50
+Eucalyptol = Focus, Decongestant, #26A69A
+Farnesene = Calming, #43A047
+Fenchol = Antibacterial, #26A69A
+gamma-Terpinene = Antioxidant, #7CB342
+Geraniol = Calming, #43A047
+Geranyl Acetate = Calming, #43A047
+Guaiol = Anti-inflammatory, #7CB342
+Isopulegol = Calming, #43A047
+Linalool = Calming, Anti-anxiety, #7E57C2
+p-Cymene = Anti-inflammatory, #7CB342
+Pulegone = Energizing, #F28C28
+Sabinene Hydrate = Anti-inflammatory, #7CB342
+Terpinolene = Uplifting, Calming, #8BC34A
+trans-Nerolidol = Calming, Sedating, #5E35B1
+Valencene = Uplifting, #F28C28
+
+# Aliases
+Myrcene = beta-Myrcene
+Limonene = d-Limonene
+Nerolidol = trans-Nerolidol
+Ocimene = beta-Ocimene
